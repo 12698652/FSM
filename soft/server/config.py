@@ -40,9 +40,13 @@ LABELS_PATH = os.path.join(BASE_DIR, "data", "labels.csv")
 SESSION_GAP_MIN = 30
 
 # TVB-N 分级阈值（mg/100g，参照 GB 2707 鲜肉一级鲜度 ≤15）
+# 四级分类: <15 新鲜 / 15~20 预警 / 20~25 轻微变质 / >=25 腐坏
+# （20/25 两个界值为本项目约定值，若有实验室数据可再校准）
 TVBN_FRESH_MAX = 15.0
-TVBN_WARNING_MAX = 25.0
+TVBN_WARNING_MAX = 20.0
+TVBN_SLIGHT_MAX = 25.0
 
 # 伪标签（NH₃ 阈值）——仅用于演示/管线验证，属循环论证，不可作为答辩结论
 PSEUDO_FRESH_MAX = 700
-PSEUDO_WARNING_MAX = 1200
+PSEUDO_WARNING_MAX = 900
+PSEUDO_SLIGHT_MAX = 1200

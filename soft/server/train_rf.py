@@ -33,13 +33,14 @@ def evaluate(name, model, Xtr, ytr, Xte, yte, stages):
     pred = model.predict(Xte)
     acc = accuracy_score(yte, pred)
     f1 = f1_score(yte, pred, average="macro", zero_division=0)
-    cm = confusion_matrix(yte, pred, labels=[0, 1, 2]).tolist()
+    all_labels = list(range(len(stages)))
+    cm = confusion_matrix(yte, pred, labels=all_labels).tolist()
     print(f"\n=== {name} ===")
     print(f"准确率 {acc:.4f} | macro-F1 {f1:.4f}")
-    print("混淆矩阵(行=真实 列=预测, Fresh/Warning/Danger):")
+    print(f"混淆矩阵(行=真实 列=预测, 顺序 {'/'.join(stages)}):")
     for s, row in zip(stages, cm):
         print(f"  {s:8s} {row}")
-    print(classification_report(yte, pred, labels=[0, 1, 2],
+    print(classification_report(yte, pred, labels=all_labels,
                                 target_names=stages, zero_division=0))
     return {"name": name, "accuracy": round(acc, 4), "macro_f1": round(f1, 4),
             "confusion_matrix": cm}

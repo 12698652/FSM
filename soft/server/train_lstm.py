@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """LSTM + Attention 分类模型训练（按技术文档架构）
 
-架构: LSTM(64) → LSTM(32) → Dropout(0.2) → Attention → Softmax(3)
+架构: LSTM(64) → LSTM(32) → Dropout(0.2) → Attention → Softmax(类别数自适应, 4级分类)
 训练: Adam lr=0.001, batch=32, 早停(验证集 loss 不再下降则停)
 输出: server/model.pth + metrics.json
 
@@ -34,7 +34,7 @@ SEED = 42
 class LSTMAttention(nn.Module):
     """LSTM 双层编码 + 加性注意力聚合 + 全连接分类"""
 
-    def __init__(self, n_features, n_classes=3, h1=HIDDEN1, h2=HIDDEN2, dropout=DROPOUT):
+    def __init__(self, n_features, n_classes=4, h1=HIDDEN1, h2=HIDDEN2, dropout=DROPOUT):
         super().__init__()
         self.lstm1 = nn.LSTM(n_features, h1, batch_first=True)
         self.lstm2 = nn.LSTM(h1, h2, batch_first=True)
@@ -75,13 +75,16 @@ def train():
     print(f"数据: 训练 {tuple(X_tr.shape)} | 验证 {tuple(X_val.shape)} | "
           f"测试 {tuple(X_test.shape)} | 特征 {n_features}")
 
+    # 类别数从数据的 stage_names 自适应（当前为 4 级分类）
+    n_classes = len(stage_names)
+
     # 类别权重：样本少的类别给更大权重
-    counts = np.bincount(y_tr.numpy(), minlength=3).astype(np.float32)
+    counts = np.bincount(y_tr.numpy(), minlength=n_classes).astype(np.float32)
     counts[counts == 0] = 1.0
     weights = torch.tensor(counts.sum() / (len(counts) * counts), dtype=torch.float32)
-    print(f"类别权重: " + ", ".join(f"{stage_names[i]}={weights[i]:.2f}" for i in range(3)))
+    print(f"类别权重: " + ", ".join(f"{stage_names[i]}={weights[i]:.2f}" for i in range(n_classes)))
 
-    model = LSTMAttention(n_features)
+    model = LSTMAttention(n_features, n_classes)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     criterion = nn.CrossEntropyLoss(weight=weights.to(device))
@@ -126,16 +129,16 @@ def train():
         pred = model(X_test.to(device)).argmax(dim=1).cpu().numpy()
     acc = accuracy_score(y_test_np, pred)
     f1 = f1_score(y_test_np, pred, average="macro", zero_division=0)
-    cm = confusion_matrix(y_test_np, pred, labels=[0, 1, 2]).tolist()
+    cm = confusion_matrix(y_test_np, pred, labels=list(range(n_classes))).tolist()
     print(f"\n测试集准确率: {acc:.4f} | macro-F1: {f1:.4f}")
-    print("混淆矩阵 (行=真实 列=预测, 顺序 Fresh/Warning/Danger):")
+    print(f"混淆矩阵 (行=真实 列=预测, 顺序 {'/'.join(stage_names)}):")
     for name, row in zip(stage_names, cm):
         print(f"  {name:8s} {row}")
-    print(classification_report(y_test_np, pred, labels=[0, 1, 2],
+    print(classification_report(y_test_np, pred, labels=list(range(n_classes)),
                                 target_names=stage_names, zero_division=0))
 
     torch.save({"state_dict": model.state_dict(),
-                "n_features": n_features, "n_classes": 3,
+                "n_features": n_features, "n_classes": n_classes,
                 "hidden1": HIDDEN1, "hidden2": HIDDEN2,
                 "norm_lo": d["norm_lo"], "norm_hi": d["norm_hi"],
                 "window": int(d["window"]),

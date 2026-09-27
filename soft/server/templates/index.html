@@ -29,6 +29,7 @@
   .pill.replay { background: #feeebc; color: #744210; }
   .pill.fresh { background: #c6f6d5; color: #22543d; }
   .pill.warning { background: #feeebc; color: #744210; }
+  .pill.slight { background: #feebc8; color: #7b341e; }
   .pill.danger { background: #fed7d7; color: #742a2a; }
   .btn {
     padding: 5px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
@@ -71,6 +72,7 @@
   .predict-stage { text-align: center; font-size: 26px; font-weight: 800; margin: 4px 0 12px; color: #4a5568; }
   .predict-stage.fresh { color: #22543d; }
   .predict-stage.warning { color: #b7791f; }
+  .predict-stage.slight { color: #c05621; }
   .predict-stage.danger { color: #c53030; }
   .probs { display: flex; flex-direction: column; gap: 6px; }
   .prob-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
@@ -79,6 +81,7 @@
   .prob-fill { height: 100%; border-radius: 999px; transition: width .3s; }
   .prob-fill.fresh { background: #38a169; }
   .prob-fill.warning { background: #d69e2e; }
+  .prob-fill.slight { background: #dd6b20; }
   .prob-fill.danger { background: #e53e3e; }
   .prob-val { width: 48px; text-align: right; color: #4a5568; font-weight: 600; }
   .chart-box { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
@@ -180,9 +183,10 @@ const METRICS = {
 // 预警分级（阶段0用阈值法，阶段5接入 LSTM 模型后替换）
 function stageOf(r) {
   const nh3 = r.nh3_adc || 0;
-  if (nh3 < 700)  return { key: "fresh",   text: "新鲜 Fresh" };
-  if (nh3 < 1200) return { key: "warning", text: "预警 Warning" };
-  return { key: "danger", text: "危险 Danger" };
+  if (nh3 < 700)   return { key: "fresh",   text: "新鲜 Fresh" };
+  if (nh3 < 900)   return { key: "warning", text: "预警 Warning" };
+  if (nh3 < 1200)  return { key: "slight",  text: "轻微变质 Slight" };
+  return { key: "danger", text: "腐坏 Spoiled" };
 }
 
 let currentKey = "voc";
@@ -249,9 +253,11 @@ function setStatus(cls, text) {
 const STAGE_META = {
   Fresh:   { key: "fresh",   text: "新鲜 Fresh" },
   Warning: { key: "warning", text: "预警 Warning" },
-  Danger:  { key: "danger",  text: "危险 Danger" },
+  Slight:  { key: "slight",  text: "轻微变质 Slight" },
+  Spoiled: { key: "danger",  text: "腐坏 Spoiled" },
+  Danger:  { key: "danger",  text: "腐坏 Spoiled" },   // 兼容旧3类模型，重训后不再出现
 };
-const PROB_ORDER = ["Fresh", "Warning", "Danger"];
+const PROB_ORDER = ["Fresh", "Warning", "Slight", "Spoiled", "Danger"];
 
 async function refreshPredict() {
   const badge = document.getElementById("predict-badge");

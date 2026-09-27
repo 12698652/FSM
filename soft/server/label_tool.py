@@ -18,7 +18,7 @@ NH₃ 阈值伪标签（属循环论证，仅供演示）。本工具帮你把�
 字段说明
 ----
   timestamp : 该阶段开始的时间（与数据库采样时间对齐，merge_asof 向后匹配）
-  stage     : 0=Fresh 新鲜 / 1=Warning 预警 / 2=Danger 危险（填了它就以它为准）
+  stage     : 0=Fresh 新鲜 / 1=Warning 预警 / 2=Slight 轻微变质 / 3=Spoiled 腐坏（填了它就以它为准）
   tvb_n     : TVB-N 实测值 mg/100g（未填 stage 时，由阈值自动分级）
   ph        : pH 实测值
   note      : 备注（正式训练前请删除含「示例」字样的行）
@@ -33,10 +33,11 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import (BASE_DIR, DB_PATH, DEMO_BEFORE, LABELS_PATH,
-                    TVBN_FRESH_MAX, TVBN_WARNING_MAX)
+                    TVBN_FRESH_MAX, TVBN_SLIGHT_MAX, TVBN_WARNING_MAX)
 from preprocess import WINDOW_SIZE
 
-STAGE_NAMES = {0: "Fresh(新鲜)", 1: "Warning(预警)", 2: "Danger(危险)"}
+STAGE_NAMES = {0: "Fresh(新鲜)", 1: "Warning(预警)",
+               2: "Slight(轻微变质)", 3: "Spoiled(腐坏)"}
 WORK_PATH = os.path.join(BASE_DIR, "data", "labels_work.csv")
 
 
@@ -96,9 +97,9 @@ def cmd_new(args):
     os.makedirs(os.path.dirname(WORK_PATH), exist_ok=True)
     out.to_csv(WORK_PATH, index=False, encoding="utf-8-sig")
     print(f"已生成待填模板 → {WORK_PATH}（{len(out)} 行，时间点已按实测采样对齐）")
-    print("填法: stage 填 0/1/2（0=新鲜 1=预警 2=危险）；或只填 tvb_n 由阈值自动分级")
+    print("填法: stage 填 0/1/2/3（0=新鲜 1=预警 2=轻微变质 3=腐坏）；或只填 tvb_n 由阈值自动分级")
     print(f"      TVB-N 阈值: <{TVBN_FRESH_MAX} 新鲜 / {TVBN_FRESH_MAX}~{TVBN_WARNING_MAX} 预警 / "
-          f">= {TVBN_WARNING_MAX} 危险")
+          f"{TVBN_WARNING_MAX}~{TVBN_SLIGHT_MAX} 轻微变质 / >= {TVBN_SLIGHT_MAX} 腐坏")
     print("填好后另存为 data/labels.csv，再执行: python server/label_tool.py check")
 
 

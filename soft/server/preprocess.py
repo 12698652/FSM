@@ -27,15 +27,16 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from config import (DEMO_BEFORE, LABELS_PATH, PSEUDO_FRESH_MAX,
-                    PSEUDO_WARNING_MAX, SESSION_GAP_MIN, TVBN_FRESH_MAX,
-                    TVBN_WARNING_MAX, DB_PATH)
+                    PSEUDO_SLIGHT_MAX, PSEUDO_WARNING_MAX, SESSION_GAP_MIN,
+                    TVBN_FRESH_MAX, TVBN_SLIGHT_MAX, TVBN_WARNING_MAX, DB_PATH)
 
 # ============ 可调参数 ============
 WINDOW_SIZE = 60        # 滑动窗口: 60 个采样点(60分钟)
 STRIDE = 2              # 窗口步长(重叠采样)
 TEST_RATIO = 0.3        # 单场次时的测试比例
 FEATURES = ["voc", "co2eq", "tvoc", "temperature", "humidity", "nh3_adc"]
-STAGE_NAMES = ["Fresh", "Warning", "Danger"]
+STAGE_NAMES = ["Fresh", "Warning", "Slight", "Spoiled"]   # 新鲜/预警/轻微变质/腐坏
+N_CLASSES = 4
 SEED = 42
 
 
@@ -72,7 +73,9 @@ def load_labels():
             stages.append(int(r["stage"]))
         elif "tvb_n" in lab.columns and pd.notna(r.get("tvb_n")):
             v = float(r["tvb_n"])
-            stages.append(0 if v < TVBN_FRESH_MAX else (1 if v < TVBN_WARNING_MAX else 2))
+            stages.append(0 if v < TVBN_FRESH_MAX else
+                          (1 if v < TVBN_WARNING_MAX else
+                           (2 if v < TVBN_SLIGHT_MAX else 3)))
         else:
             stages.append(np.nan)
     lab["_stage"] = stages
@@ -86,7 +89,9 @@ def pseudo_stage(nh3_adc):
         return 0
     if nh3_adc < PSEUDO_WARNING_MAX:
         return 1
-    return 2
+    if nh3_adc < PSEUDO_SLIGHT_MAX:
+        return 2
+    return 3
 
 
 def attach_labels(df, lab, source):
@@ -155,7 +160,7 @@ def main():
     df["session"] = detect_sessions(df["timestamp_dt"])
     n_sess = int(df["session"].nunique())
     print(f"[标签] {label_source} | 覆盖 {len(df)} 条 | 阶段分布: " +
-          ", ".join(f"{STAGE_NAMES[k]}={int((df['stage'] == k).sum())}" for k in range(3)))
+          ", ".join(f"{STAGE_NAMES[k]}={int((df['stage'] == k).sum())}" for k in range(N_CLASSES)))
     print(f"[场次] 检测到 {n_sess} 个实验场次")
 
     Xs, ys, sess = [], [], []
@@ -195,7 +200,7 @@ def main():
     print(f"[窗口] 训练 {X_train.shape} | 测试 {X_test.shape}")
     for tag, yy in (("训练", y_train), ("测试", y_test)):
         print(f"       {tag}标签分布: " + ", ".join(
-            f"{STAGE_NAMES[k]}={int((yy == k).sum())}" for k in range(3)))
+            f"{STAGE_NAMES[k]}={int((yy == k).sum())}" for k in range(N_CLASSES)))
 
     os.makedirs("data", exist_ok=True)
     np.savez_compressed(
