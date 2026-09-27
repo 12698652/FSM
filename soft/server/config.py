@@ -19,13 +19,19 @@ CLIENT_ID_ESP32 = "esp32_food_001"      # ESP32 固件端（firmware 中保持�
 
 # ===== 数据存储路径 =====
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_here = os.path.dirname(os.path.abspath(__file__))
+# 兼容两种部署布局（data 目录在哪，项目根就在哪）：
+#   本地 soft/server/config.py → data 在上一级 soft/data
+#   云端 gjn/config.py         → data 在同级 gjn/data
+BASE_DIR = _here if os.path.isdir(os.path.join(_here, "data")) else os.path.dirname(_here)
 DB_PATH = os.path.join(BASE_DIR, "data", "food.db")
 CSV_PATH = os.path.join(BASE_DIR, "data", "measurements.csv")
 
 # ===== Flask Web 服务 =====
 WEB_HOST = "0.0.0.0"    # 监听所有网卡（手机 / Tailscale 远程均可访问）
-WEB_PORT = 5000
+# 端口可通过环境变量覆盖：本地默认 5000；云端 systemd 注入 WEB_PORT=5001
+# （ngnix 将 /gjn 反代到 127.0.0.1:5001）
+WEB_PORT = int(os.environ.get("WEB_PORT", "5000"))
 
 # ===== 数据来源切分 =====
 # 此时间点之前的数据由 backfill_demo_data.py 生成（模拟数据，仅用于管线验证），

@@ -316,8 +316,9 @@ async function refreshLive() {
       setStatus("offline", "● 等待数据");
     } else {
       const lastTs = new Date(cache[cache.length-1].timestamp.replace(" ", "T")).getTime();
-      setStatus(Date.now() - lastTs < 20000 ? "online" : "offline",
-               Date.now() - lastTs < 20000 ? "● 实时在线" : "● 等待数据");
+      const stale = Date.now() - lastTs >= 150000;
+      setStatus(stale ? "offline" : "online",
+               stale ? "● 等待数据" : "● 实时在线");
     }
   } catch (e) { setStatus("offline", "● 等待数据"); }
 }
