@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ESP32-WROOM-32
+D ESP32-WROOM-32 WiFi/BT 模块,简化符号(仅显示用到的引脚)
+K ESP32 WiFi Bluetooth MCU
+F https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf
+$ENDCMP
+#
+#End Doc Library

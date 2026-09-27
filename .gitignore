@@ -1,0 +1,19 @@
+﻿# ---- Python ----
+.venv/
+__pycache__/
+*.pyc
+
+# ---- PlatformIO ----
+.pio-core/
+.pio/
+firmware/.pio/
+
+# ---- 运行时产物 ----
+soft/logs/
+*.log
+
+# ---- 编辑器 / 系统 ----
+.trae/
+.eda_tmp/
+~$*
+Thumbs.db

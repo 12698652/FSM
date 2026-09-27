@@ -1,0 +1,11 @@
+{
+  "source": "demo",
+  "label_source": "pseudo(NH3阈值, 仅演示)",
+  "n_sessions": 1,
+  "window": 60,
+  "stride": 2,
+  "split": "单场次: 按标签分层随机切分(70/30)（注意: 重叠窗口会带来乐观偏差, 真实实验请用多场次）",
+  "train": 987,
+  "test": 424,
+  "generated_at": "2026-09-24 01:20:57"
+}

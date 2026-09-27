@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>食品腐败智能检测系统</title>
+<script src=/gjn/static/chart.umd.min.js></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #f0f4f8; color: #2d3748; padding: 16px;
+    max-width: 960px; margin: 0 auto;
+  }
+  header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  h1 { font-size: 20px; }
+  .header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pill {
+    padding: 4px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    background: #e2e8f0; color: #4a5568;
+  }
+  .pill.online { background: #c6f6d5; color: #22543d; }
+  .pill.offline { background: #fed7d7; color: #742a2a; }
+  .pill.replay { background: #feeebc; color: #744210; }
+  .pill.fresh { background: #c6f6d5; color: #22543d; }
+  .pill.warning { background: #feeebc; color: #744210; }
+  .pill.danger { background: #fed7d7; color: #742a2a; }
+  .btn {
+    padding: 5px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    border: 1px solid #cbd5e0; background: #fff; color: #4a5568; font-weight: 600;
+  }
+  .btn.primary { background: #3182ce; color: #fff; border-color: #3182ce; }
+  .btn.warn { background: #d69e2e; color: #fff; border-color: #d69e2e; }
+  .query-bar {
+    background: #fff; border: 1px solid #cbd5e0; border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; align-items: center;
+    display: flex; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .query-bar label { font-size: 13px; color: #4a5568; font-weight: 600; }
+  .btn.rng { padding: 4px 10px; font-size: 12px; }
+  .btn.rng.active { background: #3182ce; color: #fff; border-color: #3182ce; }
+  .query-bar input[type="datetime-local"] {
+    padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 13px;
+  }
+  .replay-bar {
+    display: none; background: #fffbeb; border: 1px solid #f6d55c; border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .replay-bar.show { display: flex; }
+  .replay-bar label { font-size: 13px; color: #744210; font-weight: 600; }
+  select { padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 13px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); text-align: center;
+  }
+  .card .label { font-size: 12px; color: #718096; }
+  .card .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .card .unit { font-size: 12px; color: #a0aec0; }
+  .chart-box { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .tab {
+    padding: 5px 12px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    background: #edf2f7; color: #4a5568; border: none;
+  }
+  .tab.active { background: #3182ce; color: #fff; }
+  canvas { max-height: 300px; }
+  footer { text-align: center; font-size: 12px; color: #a0aec0; margin-top: 14px; }
+  @media (max-width: 480px) { .card .value { font-size: 18px; } h1 { font-size: 17px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>食品腐败智能检测系统</h1>
+  <div class="header-right">
+    <span id="stage" class="pill fresh">状态：--</span>
+    <span id="status" class="pill">连接中…</span>
+    <button id="btn-replay" class="btn warn">▶ 演示模式</button>
+  </div>
+</header>
+
+<div class="query-bar" id="query-bar">
+  <label>快速范围:</label>
+  <button class="btn rng" data-min="10">10分钟</button>
+  <button class="btn rng" data-min="60">1小时</button>
+  <button class="btn rng" data-min="120">2小时</button>
+  <button class="btn rng" data-min="360">6小时</button>
+  <button class="btn rng" data-min="720">12小时</button>
+  <button class="btn rng" data-min="1440">24小时</button>
+  <button class="btn rng" data-min="2880">48小时</button>
+  <label style="margin-left:10px;">自定义:</label>
+  <input type="datetime-local" id="q-from"> <span style="font-size:13px;color:#718096;">至</span>
+  <input type="datetime-local" id="q-to">
+  <button id="btn-query" class="btn primary">🔍 查询</button>
+  <button id="btn-exit-query" class="btn" style="display:none;">返回实时</button>
+  <span id="q-count" style="font-size:12px;color:#718096;margin-left:auto;font-weight:600;"></span>
+</div>
+
+<div class="replay-bar" id="replay-bar">
+  <label>倍速:</label>
+  <select id="speed">
+    <option value="60">60x（48h→48分钟）</option>
+    <option value="180" selected>180x（48h→16分钟）</option>
+    <option value="600">600x（48h→4.8分钟）</option>
+    <option value="1800">1800x（48h→1.6分钟）</option>
+  </select>
+  <button id="btn-play" class="btn primary">⏸ 暂停</button>
+  <button id="btn-restart" class="btn">⟲ 重播</button>
+  <button id="btn-exit" class="btn">退出回放</button>
+  <span id="replay-progress" style="font-size:12px;color:#744210;margin-left:auto;font-weight:600;"></span>
+</div>
+
+<div class="cards">
+  <div class="card"><div class="label">VOC 指数</div><div class="value" id="v-voc">--</div><div class="unit">BME680</div></div>
+  <div class="card"><div class="label">eCO₂</div><div class="value" id="v-co2eq">--</div><div class="unit">ppm · SGP30</div></div>
+  <div class="card"><div class="label">TVOC</div><div class="value" id="v-tvoc">--</div><div class="unit">ppb · SGP30</div></div>
+  <div class="card"><div class="label">NH₃ (ADC)</div><div class="value" id="v-nh3">--</div><div class="unit">MQ-137</div></div>
+  <div class="card"><div class="label">温度</div><div class="value" id="v-temp">--</div><div class="unit">℃</div></div>
+  <div class="card"><div class="label">湿度</div><div class="value" id="v-humi">--</div><div class="unit">%</div></div>
+</div>
+
+<div class="chart-box">
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-key="voc">VOC</button>
+    <button class="tab" data-key="co2eq">eCO₂</button>
+    <button class="tab" data-key="tvoc">TVOC</button>
+    <button class="tab" data-key="nh3_adc">NH₃</button>
+    <button class="tab" data-key="temperature">温度</button>
+    <button class="tab" data-key="humidity">湿度</button>
+  </div>
+  <canvas id="chart"></canvas>
+</div>
+
+<footer>数据来源：巴法云 MQTT · PC 服务器实时接收 | 支持实时/回放双模式</footer>
+
+<script>
+// API 路径前缀自适应：PC 直跑为 ""，云上挂在 /gjn 下为 "/gjn"
+const BASE = location.pathname.replace(/\/(index\.html)?$/, "");
+const METRICS = {
+  voc:      { label: "VOC 指数",  color: "#3182ce" },
+  co2eq:    { label: "eCO₂ (ppm)", color: "#38a169" },
+  tvoc:     { label: "TVOC (ppb)", color: "#d69e2e" },
+  nh3_adc:  { label: "NH₃ ADC 值", color: "#e53e3e" },
+  temperature: { label: "温度 (℃)", color: "#805ad5" },
+  humidity:    { label: "湿度 (%)", color: "#319795" },
+};
+// 预警分级（阶段0用阈值法，阶段5接入 LSTM 模型后替换）
+function stageOf(r) {
+  const nh3 = r.nh3_adc || 0;
+  if (nh3 < 700)  return { key: "fresh",   text: "新鲜 Fresh" };
+  if (nh3 < 1200) return { key: "warning", text: "预警 Warning" };
+  return { key: "danger", text: "危险 Danger" };
+}
+
+let currentKey = "voc";
+let cache = [];        // 当前显示数据
+let lastId = 0;        // 实时模式增量游标
+let chart = null;
+let liveTimer = null;
+
+// ============ 回放模式状态 ============
+let replay = { active: false, playing: false, data: [], idx: 0, speed: 180, timer: null };
+
+const chartEl = document.getElementById("chart");
+chart = new Chart(chartEl, {
+  type: "line",
+  data: { labels: [], datasets: [{ label: "", data: [], borderColor: "#3182ce",
+    backgroundColor: "rgba(49,130,206,.08)", fill: true, tension: .3, pointRadius: 0, borderWidth: 2 }] },
+  options: {
+    animation: false, responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } } }
+  }
+});
+
+document.getElementById("tabs").addEventListener("click", e => {
+  if (!e.target.classList.contains("tab")) return;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  e.target.classList.add("active");
+  currentKey = e.target.dataset.key;
+  renderChart();
+});
+
+function renderChart() {
+  const m = METRICS[currentKey];
+  // 跨天数据显示"月-日 时:分"，同一天只显示"时:分"
+  const crossDay = cache.length > 1 &&
+    cache[0].timestamp.slice(0, 10) !== cache[cache.length - 1].timestamp.slice(0, 10);
+  chart.data.labels = cache.map(r => (r.timestamp || "").slice(crossDay ? 5 : 11, 16));
+  chart.data.datasets[0].label = m.label;
+  chart.data.datasets[0].data = cache.map(r => r[currentKey]);
+  chart.data.datasets[0].borderColor = m.color;
+  chart.data.datasets[0].backgroundColor = m.color + "20";
+  chart.update();
+}
+
+function renderCards(latest) {
+  if (!latest || !latest.id) return;
+  const set = (id, v) => document.getElementById(id).textContent = (v === null || v === undefined) ? "--" : v;
+  set("v-voc", latest.voc); set("v-co2eq", latest.co2eq); set("v-tvoc", latest.tvoc);
+  set("v-nh3", latest.nh3_adc);
+  set("v-temp", latest.temperature); set("v-humi", latest.humidity);
+  const st = stageOf(latest);
+  const el = document.getElementById("stage");
+  el.textContent = "状态：" + st.text;
+  el.className = "pill " + st.key;
+}
+
+function setStatus(cls, text) {
+  const el = document.getElementById("status");
+  el.textContent = text;
+  el.className = "pill " + cls;
+}
+
+// ============ 实时模式 ============
+async function refreshLive() {
+  try {
+    const url = lastId ? `${BASE}/api/data?since_id=${lastId}&limit=200` : `${BASE}/api/data?limit=120`;
+    const res = await fetch(url);
+    const rows = await res.json();
+    if (rows.length) {
+      if (lastId) cache = cache.concat(rows); else cache = rows;
+      if (cache.length > 300) cache = cache.slice(-300);
+      lastId = cache[cache.length - 1].id;
+      renderCards(cache[cache.length - 1]);
+      renderChart();
+      setStatus("online", "● 实时在线");
+    } else if (!lastId) {
+      setStatus("offline", "● 等待数据");
+    } else {
+      const lastTs = new Date(cache[cache.length-1].timestamp.replace(" ", "T")).getTime();
+      setStatus(Date.now() - lastTs < 20000 ? "online" : "offline",
+               Date.now() - lastTs < 20000 ? "● 实时在线" : "● 等待数据");
+    }
+  } catch (e) { setStatus("offline", "● 等待数据"); }
+}
+
+function startLive() {
+  replay.active = false;
+  cache = []; lastId = 0;
+  if (liveTimer) clearInterval(liveTimer);
+  refreshLive();
+  liveTimer = setInterval(refreshLive, 3000);
+}
+
+// ============ 回放模式 ============
+async function startReplay() {
+  // 拉取最近 48 小时数据（约 2880 条）
+  const res = await fetch(`${BASE}/api/history?limit=5000&from=1970-01-01 00:00:00`);
+  const all = await res.json();
+  if (!all.length) { alert("数据库暂无历史数据"); return; }
+  // 只取最近 48h
+  const cutoff = new Date(new Date(all[all.length-1].timestamp.replace(" ","T")).getTime() - 48*3600*1000);
+  replay.data = all.filter(r => new Date(r.timestamp.replace(" ","T")) >= cutoff);
+
+  replay.active = true;
+  replay.idx = 0;
+  replay.speed = parseInt(document.getElementById("speed").value);
+  document.getElementById("replay-bar").classList.add("show");
+  document.getElementById("btn-replay").style.display = "none";
+  if (liveTimer) clearInterval(liveTimer);
+  playReplay();
+}
+
+function playReplay() {
+  replay.playing = true;
+  document.getElementById("btn-play").textContent = "⏸ 暂停";
+  setStatus("replay", "▶ 回放中");
+
+  // 每 200ms 一个 tick，按倍速推进
+  replay.timer = setInterval(() => {
+    if (!replay.playing) return;
+    // 每 tick 推进 speed*0.2 秒的虚拟时间 → 对应数据条数
+    const step = Math.max(1, Math.round(replay.speed * 0.2 / 60));  // 采样间隔60s
+    replay.idx = Math.min(replay.idx + step, replay.data.length);
+    const shown = replay.data.slice(Math.max(0, replay.idx - 300), replay.idx);  // 图表窗口300条
+    cache = shown;
+    const cur = replay.data[replay.idx - 1];
+    if (cur) {
+      renderCards(cur);
+      renderChart();
+      const progress = document.getElementById("replay-progress");
+      const totalH = 48;
+      const playedH = (replay.idx / replay.data.length * totalH);
+      progress.textContent = `已播放 ${playedH.toFixed(1)}h / ${totalH}h`;
+    }
+    if (replay.idx >= replay.data.length) {
+      pauseReplay();
+      setStatus("replay", "回放结束");
+      document.getElementById("btn-play").textContent = "⟲ 重播";
+    }
+  }, 200);
+}
+
+function pauseReplay() {
+  replay.playing = false;
+  if (replay.timer) clearInterval(replay.timer);
+  document.getElementById("btn-play").textContent = "▶ 继续";
+}
+
+function exitReplay() {
+  if (replay.timer) clearInterval(replay.timer);
+  replay.active = false;
+  document.getElementById("replay-bar").classList.remove("show");
+  document.getElementById("btn-replay").style.display = "";
+  startLive();
+}
+
+document.getElementById("btn-replay").addEventListener("click", startReplay);
+document.getElementById("btn-play").addEventListener("click", () => {
+  if (replay.idx >= replay.data.length) {  // 结束后点击=重播
+    replay.idx = 0;
+    playReplay();
+  } else if (replay.playing) {
+    pauseReplay();
+  } else {
+    playReplay();
+  }
+});
+document.getElementById("btn-restart").addEventListener("click", () => {
+  if (replay.timer) clearInterval(replay.timer);
+  replay.idx = 0;
+  playReplay();
+});
+document.getElementById("btn-exit").addEventListener("click", exitReplay);
+document.getElementById("speed").addEventListener("change", (e) => {
+  replay.speed = parseInt(e.target.value);
+});
+
+// ============ 历史查询模式 ============
+function stopTimers() {
+  if (liveTimer) clearInterval(liveTimer);
+  if (replay.timer) clearInterval(replay.timer);
+  replay.active = false;
+  document.getElementById("replay-bar").classList.remove("show");
+}
+
+async function runQuery() {
+  const fromEl = document.getElementById("q-from"), toEl = document.getElementById("q-to");
+  if (!fromEl.value) { alert("请选择起始时间"); return; }
+  const from = fromEl.value.replace("T", " ") + ":00";
+  const to = toEl.value ? toEl.value.replace("T", " ") + ":00" : "";
+  const res = await fetch(`${BASE}/api/history?limit=20000&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+  const rows = await res.json();
+  stopTimers();
+  cache = rows;
+  const cnt = document.getElementById("q-count");
+  cnt.textContent = rows.length ? `共 ${rows.length} 条` : "该时间段无数据";
+  if (rows.length) { renderCards(rows[rows.length - 1]); renderChart(); }
+  setStatus("replay", "🔍 历史查询");
+  document.getElementById("btn-exit-query").style.display = "";
+}
+
+function exitQuery() {
+  document.getElementById("btn-exit-query").style.display = "none";
+  document.getElementById("q-count").textContent = "";
+  document.querySelectorAll(".btn.rng").forEach(b => b.classList.remove("active"));
+  startLive();
+}
+
+document.getElementById("btn-query").addEventListener("click", runQuery);
+document.getElementById("btn-exit-query").addEventListener("click", exitQuery);
+
+// ============ 快速范围按钮（10分钟~48小时） ============
+async function runQuickRange(min, btn) {
+  const pad = n => String(n).padStart(2, "0");
+  const local = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const now = new Date();
+  const from = local(new Date(now.getTime() - min * 60000));
+  const res = await fetch(`${BASE}/api/history?limit=20000&from=${encodeURIComponent(from)}`);
+  const rows = await res.json();
+  stopTimers();
+  cache = rows;
+  const cnt = document.getElementById("q-count");
+  const h = (min / 60);
+  cnt.textContent = rows.length ? `近 ${h < 1 ? min + " 分钟" : h + " 小时"} · ${rows.length} 条` : "该时间段无数据";
+  if (rows.length) { renderCards(rows[rows.length - 1]); renderChart(); }
+  setStatus("replay", "🔍 历史查询");
+  document.querySelectorAll(".btn.rng").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  // 同步自定义输入框，方便在此基础上微调
+  document.getElementById("q-from").value = from.slice(0, 16);
+  document.getElementById("q-to").value = local(now).slice(0, 16);
+  document.getElementById("btn-exit-query").style.display = "";
+}
+
+document.querySelectorAll(".btn.rng").forEach(btn => {
+  btn.addEventListener("click", () => runQuickRange(parseInt(btn.dataset.min), btn));
+});
+
+// 查询栏默认值：近 12 小时
+(function initQueryBar() {
+  const fmt = d => d.toISOString().slice(0, 16);   // datetime-local 格式
+  const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+  const ago = new Date(now.getTime() - 12 * 3600 * 1000);
+  document.getElementById("q-from").value = fmt(ago);
+  document.getElementById("q-to").value = fmt(now);
+})();
+
+// 启动：默认实时模式
+startLive();
+</script>
+</body>
+</html>

@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>食品腐败风险预测系统 - 电气接线图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", "SimHei", sans-serif; background: #f5f5f5; color: #333; }
+  .page { width: 1200px; margin: 0 auto; background: #fff; padding: 40px 50px; }
+  @media print { .page { width: 100%; margin: 0; padding: 20px; } }
+
+  /* 标题区 */
+  .title-block { border: 2px solid #000; padding: 15px 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+  .title-block h1 { font-size: 22px; letter-spacing: 2px; }
+  .title-block .meta { font-size: 12px; text-align: right; line-height: 1.8; }
+  .title-block .meta span { display: block; }
+
+  /* 图框 */
+  .drawing-frame { border: 2px solid #000; margin-bottom: 30px; position: relative; }
+  .drawing-frame .frame-title { position: absolute; bottom: 0; right: 0; border-top: 2px solid #000; border-left: 2px solid #000; padding: 8px 15px; font-size: 11px; line-height: 1.6; background: #fff; z-index: 10; }
+  .drawing-frame svg { display: block; width: 100%; }
+
+  /* 表格 */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px; }
+  th, td { border: 1px solid #333; padding: 6px 10px; text-align: center; }
+  th { background: #e8e8e8; font-weight: bold; }
+  td.left { text-align: left; }
+  caption { font-size: 15px; font-weight: bold; padding: 8px 0; text-align: left; border-bottom: 2px solid #000; margin-bottom: 5px; }
+
+  /* 章节 */
+  h2 { font-size: 18px; margin: 30px 0 15px; padding-left: 10px; border-left: 4px solid #1a73e8; }
+  h3 { font-size: 15px; margin: 20px 0 10px; }
+
+  /* 图例 */
+  .legend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 5px 0; }
+  .legend-swatch { width: 60px; height: 4px; border-radius: 2px; flex-shrink: 0; }
+  .legend-swatch.thick { height: 8px; }
+
+  /* 注释 */
+  .note { background: #fffde7; border-left: 4px solid #f9a825; padding: 12px 15px; margin: 15px 0; font-size: 13px; line-height: 1.8; }
+  .note strong { color: #e65100; }
+  .warning { background: #fce4ec; border-left-color: #c62828; }
+  .warning strong { color: #c62828; }
+
+  /* 导航 */
+  .toc { background: #f8f9fa; border: 1px solid #ddd; padding: 15px 20px; margin-bottom: 30px; border-radius: 4px; }
+  .toc h3 { margin: 0 0 10px; font-size: 14px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 4px 0; font-size: 13px; }
+  .toc a { color: #1a73e8; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  .section-break { page-break-before: always; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ===== 标题栏 ===== -->
+<div class="title-block">
+  <div>
+    <h1>食品腐败风险预测系统 — 电气接线图</h1>
+    <div style="font-size:13px;margin-top:5px;color:#666;">Multi-Modal Sensor &amp; Explainable AI Food Spoilage Prediction System</div>
+  </div>
+  <div class="meta">
+    <span>图号: FSM-EWD-001</span>
+    <span>版本: V1.0</span>
+    <span>日期: 2026-07-14</span>
+    <span>标准: GB/T 4728 / IEC 61131-3</span>
+  </div>
+</div>
+
+<!-- ===== 目录 ===== -->
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#sec1">元件清单与规格参数</a></li>
+    <li><a href="#sec2">导线颜色编码与线径规格</a></li>
+    <li><a href="#sec3">端子排分配表</a></li>
+    <li><a href="#sec4">系统总接线图</a></li>
+    <li><a href="#sec5">电源子系统接线详图</a></li>
+    <li><a href="#sec6">I²C 数字传感器接线详图</a></li>
+    <li><a href="#sec7">模拟传感器 (MQ-137) 接线详图</a></li>
+    <li><a href="#sec8">风扇与辅助电路接线详图</a></li>
+    <li><a href="#sec9">图例说明</a></li>
+    <li><a href="#sec10">技术注释与施工要求</a></li>
+  </ol>
+</div>
+
+<!-- ===== 1. 元件清单 ===== -->
+<h2 id="sec1">一、元件清单与规格参数</h2>
+
+<table>
+<caption>表 1-1 电气元件清单 (Bill of Materials)</caption>
+<tr>
+  <th>序号</th><th>位号</th><th>元件名称</th><th>型号/规格</th><th>关键参数</th><th>数量</th><th>备注</th>
+</tr>
+<tr>
+  <td>1</td><td>P1</td><td>USB 电源适配器</td><td>5V/3A 手机充电头</td><td>输出5.0VDC ±5%, 3A, USB-A/C接口</td><td>1</td><td>系统总供电(直出5V)</td>
+</tr>
+<tr>
+  <td>2</td><td>SW1</td><td>电源总开关</td><td>拨动开关 SS-12F15</td><td>1P2T, 3A/125VAC, 引脚间距5mm</td><td>1</td><td>5V回路通断控制</td>
+</tr>
+<tr>
+  <td>3</td><td>F1</td><td>自恢复保险丝</td><td>PTC 0ZCG0110FF2C</td><td>保持电流1.1A, 触发电流2A, 最大电压30V</td><td>1</td><td>5V母线过流保护</td>
+</tr>
+<tr>
+  <td>4</td><td>C1</td><td>电解电容</td><td>10μF/25V</td><td>±20%, 5×7mm, 低ESR</td><td>1</td><td>5V输入滤波</td>
+</tr>
+<tr>
+  <td>5</td><td>C2</td><td>陶瓷电容</td><td>100nF/50V (0.1μF)</td><td>X7R, 0805封装</td><td>2</td><td>ADC滤波 + IC去耦</td>
+</tr>
+<tr>
+  <td>6</td><td>MCU</td><td>主控板</td><td>ESP32-WROOM-32</td><td>240MHz双核, Wi-Fi+BT, 520KB SRAM, 34 GPIO</td><td>1</td><td>已有(沿用)</td>
+</tr>
+<tr>
+  <td>7</td><td>U2</td><td>4合1环境传感器</td><td>BME680 (Bosch)</td><td>温度±1℃, 湿度±3%, 气压±1hPa, VOC指数, I²C地址0x76</td><td>1</td><td>温湿度+VOC+气压</td>
+</tr>
+<tr>
+  <td>8</td><td>U3</td><td>空气质量传感器</td><td>SGP30 (Sensirion)</td><td>TVOC 0~60000ppb, eCO₂ 400~60000ppm, I²C地址0x58</td><td>1</td><td>TVOC/eCO₂</td>
+</tr>
+<tr>
+  <td>9</td><td>U4</td><td>氨气传感器模块</td><td>MQ-137</td><td>检测NH₃ 5~200ppm, 模拟输出0~5V, 加热功耗≤0.9W(5V/29Ω)</td><td>1</td><td>氨气浓度</td>
+</tr>
+<tr>
+  <td>10</td><td>M1</td><td>微型直流风扇</td><td>5V/0.15A 40×40mm</td><td>5VDC, 150mA, 40×40×10mm, 双滚珠轴承</td><td>1</td><td>腔体空气循环(单风扇)</td>
+</tr>
+<tr>
+  <td>11</td><td>SW2</td><td>风扇开关</td><td>拨动开关 SS-12F15</td><td>1P2T, 3A/125VAC</td><td>1</td><td>风扇独立通断</td>
+</tr>
+<tr>
+  <td>12</td><td>D1</td><td>LED指示灯(红)</td><td>5mm红色LED</td><td>Vf=2.0V, If=20mA, 亮度≥2000mcd</td><td>1</td><td>5V电源指示</td>
+</tr>
+<tr>
+  <td>13</td><td>R1</td><td>限流电阻</td><td>150Ω 1/4W</td><td>±5%, (5V-2V)/20mA=150Ω</td><td>1</td><td>LED限流</td>
+</tr>
+<tr>
+  <td>14</td><td>TB1</td><td>端子排-电源</td><td>4P弹簧接线端子 5.08mm</td><td>额定10A/300V, 导线0.5~2.5mm²</td><td>1</td><td>电源分配</td>
+</tr>
+<tr>
+  <td>15</td><td>TB2</td><td>端子排-信号</td><td>8P弹簧接线端子 5.08mm</td><td>额定10A/300V, 导线0.5~2.5mm²</td><td>1</td><td>I²C+ADC信号</td>
+</tr>
+<tr>
+  <td>16</td><td>TB3</td><td>端子排-风扇</td><td>2P弹簧接线端子 5.08mm</td><td>额定10A/300V</td><td>1</td><td>风扇供电</td>
+</tr>
+</table>
+
+<!-- ===== 2. 导线颜色编码 ===== -->
+<h2 id="sec2">二、导线颜色编码与线径规格</h2>
+
+<table>
+<caption>表 2-1 导线颜色编码表 (依据 GB/T 6995.2)</caption>
+<tr>
+  <th>导线颜色</th><th>色标</th><th>信号类型</th><th>线径(AWG)</th><th>截面积</th><th>额定电流</th><th>用途说明</th>
+</tr>
+<tr>
+  <td>红色 (Red)</td>
+  <td><span style="display:inline-block;width:50px;height:16px;background:#d32f2f;border-radius:2px;"></span></td>
+  <td>+5V 电源</td>
+  <td>20 AWG</td>
+  <td>0.5mm²</td>
+  <td>3A</td>
+  <td>5V电源总线, MQ-137 VCC, 风扇VCC</td>
+</tr>
+<tr>
+  <td>橙色 (Orange)</td>
+  <td><span style="display:inline-block;width:50px;height:16px;background:#ef6c00;border-radius:2px;"></span></td>
+  <td>+3.3V 电源</td>
+  <td>22 AWG</td>
+  <td>0.32mm²</td>
+  <td>1A</td>
+  <td>BME680 VCC, SGP30 VCC (由ESP32 3.3V输出)</td>
+</tr>
+<tr>
+  <td>黑色 (Black)</td>
+  <td><span style="display:inline-block;width:50px;height:16px;background:#212121;border-radius:2px;"></span></td>
+  <td>GND 公共地</td>
+  <td>20 AWG</td>
+  <td>0.5mm²</td>
+  <td>3A</td>
+  <td>所有模块共地, 电源回流</td>
+</tr>
+<tr>
+  <td>蓝色 (Blue)</td>
+  <td><span style="display:inline-block;width:50px;height:16px;background:#1565c0;border-radius:2px;"></span></td>
+  <td>I²C SDA</td>
+  <td>24 AWG</td>
+  <td>0.2mm²</td>
+  <td>信号线</td>
+  <td>ESP32 GPIO21 → BME680 SDA → SGP30 SDA</td>
+</tr>
+<tr>
+  <td>黄色 (Yellow)</td>
+  <td><span style="display:inline-block;width:50px;height:16px;background:#f9a825;border-radius:2px;"></span></td>
+  <td>I²C SCL</td>
+  <td>24 AWG</td>
+  <td>0.2mm²</td>
+  <td>信号线</td>
+  <td>ESP32 GPIO22 → BME680 SCL → SGP30 SCL</td>
+</tr>
+<tr>
+  <td>绿色 (Green)</td>
+  <td><span style="display:inline-block;width:50px;height:16px;background:#2e7d32;border-radius:2px;"></span></td>
+  <td>模拟信号</td>
+  <td>22 AWG</td>
+  <td>0.32mm²</td>
+  <td>信号线</td>
+  <td>MQ-137 AO → ESP32 GPIO34 (ADC1_CH6)</td>
+</tr>
+<tr>
+  <td>白色 (White)</td>
+  <td><span style="display:inline-block;width:50px;height:16px;background:#e0e0e0;border:1px solid #999;border-radius:2px;"></span></td>
+  <td>数字控制/辅助</td>
+  <td>24 AWG</td>
+  <td>0.2mm²</td>
+  <td>信号线</td>
+  <td>预留:LED控制线/风扇PWM调速</td>
+</tr>
+</table>
+
+<div class="note">
+  <strong>说明:</strong> I²C 信号线 (SDA/SCL) 使用 24 AWG,短距离 (&lt;30cm) 无需额外上拉电阻(BME680/SGP30 模块板载 10kΩ 上拉)。若总线长度超过 30cm,需在 SDA/SCL 与 3.3V 之间各加 4.7kΩ 外置上拉。
+</div>
+
+<!-- ===== 3. 端子排分配 ===== -->
+<h2 id="sec3">三、端子排分配表</h2>
+
+<table>
+<caption>表 3-1 TB1 电源端子排 (4P, 编号 X1-X4)</caption>
+<tr><th>端子号</th><th>编号</th><th>信号</th><th>线色</th><th>线径</th><th>连接去向</th></tr>
+<tr><td>1</td><td>X1</td><td>+5V IN</td><td>红色</td><td>20AWG</td><td>5V/3A充电头正极 → SW1 → F1 → 5V母线</td></tr>
+<tr><td>2</td><td>X2</td><td>GND IN</td><td>黑色</td><td>20AWG</td><td>5V充电头负极 → 公共地母线</td></tr>
+<tr><td>3</td><td>X3</td><td>+5V BUS</td><td>红色</td><td>20AWG</td><td>5V母线(经PTC后) → MQ-137/风扇/ESP32 VIN</td></tr>
+<tr><td>4</td><td>X4</td><td>+3.3V</td><td>橙色</td><td>22AWG</td><td>ESP32 3.3V输出 → BME680/SGP30 VCC</td></tr>
+</table>
+
+<table>
+<caption>表 3-2 TB2 信号端子排 (8P, 编号 X6-X13)</caption>
+<tr><th>端子号</th><th>编号</th><th>信号</th><th>线色</th><th>线径</th><th>连接去向</th></tr>
+<tr><td>1</td><td>X6</td><td>I²C SDA</td><td>蓝色</td><td>24AWG</td><td>ESP32 GPIO21 → BME680 SDA → SGP30 SDA</td></tr>
+<tr><td>2</td><td>X7</td><td>I²C SCL</td><td>黄色</td><td>24AWG</td><td>ESP32 GPIO22 → BME680 SCL → SGP30 SCL</td></tr>
+<tr><td>3</td><td>X8</td><td>ADC IN (NH₃)</td><td>绿色</td><td>22AWG</td><td>MQ-137 AO → ESP32 GPIO34</td></tr>
+<tr><td>4</td><td>X9</td><td>ADC GND</td><td>黑色</td><td>22AWG</td><td>MQ-137 GND → 公共地</td></tr>
+<tr><td>5</td><td>X10</td><td>3.3V OUT</td><td>橙色</td><td>22AWG</td><td>ESP32 3.3V → BME680/SGP30 VCC</td></tr>
+<tr><td>6</td><td>X11</td><td>5V OUT</td><td>红色</td><td>20AWG</td><td>5V母线 → MQ-137 VCC</td></tr>
+<tr><td>7</td><td>X12</td><td>SGND (信号地)</td><td>黑色</td><td>22AWG</td><td>BME680/SGP30 GND → 公共地</td></tr>
+<tr><td>8</td><td>X13</td><td>预留</td><td>白色</td><td>24AWG</td><td>扩展传感器/控制线预留</td></tr>
+</table>
+
+<table>
+<caption>表 3-3 TB3 风扇端子排 (2P, 编号 X14-X15)</caption>
+<tr><th>端子号</th><th>编号</th><th>信号</th><th>线色</th><th>线径</th><th>连接去向</th></tr>
+<tr><td>1</td><td>X14</td><td>FAN +5V</td><td>红色</td><td>20AWG</td><td>5V母线 → SW2 → M1 VCC</td></tr>
+<tr><td>2</td><td>X15</td><td>FAN GND</td><td>黑色</td><td>20AWG</td><td>M1 GND → 公共地</td></tr>
+</table>
+
+<!-- ===== 4. 系统总接线图 ===== -->
+<h2 id="sec4">四、系统总接线图</h2>
+
+<div class="drawing-frame">
+<svg viewBox="0 0 1100 780" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">
+  <defs>
+    <!-- 箭头标记 -->
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#555"/></marker>
+    <marker id="arrowR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#d32f2f"/></marker>
+    <!-- 元件框样式 -->
+    <filter id="shadow"><feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/></filter>
+  </defs>
+
+  <!-- 图框标题 -->
+  <text x="20" y="25" font-size="14" font-weight="bold">图 4-1 系统总接线图 (System Wiring Diagram)</text>
+
+  <!-- ==================== 电源区域 ==================== -->
+  <rect x="20" y="45" width="320" height="310" rx="6" fill="#fafafa" stroke="#bbb" stroke-dasharray="5,3"/>
+  <text x="30" y="65" font-size="12" font-weight="bold" fill="#666">电源子系统 (Power)</text>
+
+  <!-- 5V/3A 充电头 -->
+  <rect x="35" y="80" width="140" height="55" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="2" filter="url(#shadow)"/>
+  <text x="105" y="100" text-anchor="middle" font-size="11" font-weight="bold">P1 5V/3A 充电头</text>
+  <text x="105" y="118" text-anchor="middle" font-size="9" fill="#666">USB 5.0VDC/3A</text>
+  <text x="105" y="130" text-anchor="middle" font-size="8" fill="#999">USB-A/C 接口</text>
+
+  <!-- 总开关 SW1 -->
+  <rect x="35" y="160" width="100" height="40" rx="3" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" filter="url(#shadow)"/>
+  <text x="85" y="180" text-anchor="middle" font-size="11" font-weight="bold">SW1 总开关</text>
+  <text x="85" y="193" text-anchor="middle" font-size="8" fill="#666">1P2T / 3A</text>
+
+  <!-- PTC保险丝 -->
+  <rect x="35" y="225" width="110" height="35" rx="3" fill="#fce4ec" stroke="#c62828" stroke-width="2" filter="url(#shadow)"/>
+  <text x="90" y="247" text-anchor="middle" font-size="11" font-weight="bold">F1 PTC 1.1A</text>
+
+  <!-- C1 滤波电容 -->
+  <rect x="35" y="285" width="110" height="40" rx="3" fill="#fce4ec" stroke="#c62828" stroke-width="1.5"/>
+  <text x="90" y="302" text-anchor="middle" font-size="9" font-weight="bold">C1 10μF/25V</text>
+  <text x="90" y="316" text-anchor="middle" font-size="8" fill="#666">5V输入滤波</text>
+
+  <!-- 电源连接线 (5V直供) -->
+  <line x1="105" y1="135" x2="105" y2="160" stroke="#d32f2f" stroke-width="3"/>
+  <text x="110" y="150" font-size="8" fill="#d32f2f">5V 红</text>
+  <line x1="85" y1="200" x2="85" y2="225" stroke="#d32f2f" stroke-width="3"/>
+  <line x1="85" y1="260" x2="85" y2="285" stroke="#d32f2f" stroke-width="3"/>
+
+  <!-- 5V母线 (垂直粗线) -->
+  <line x1="105" y1="325" x2="105" y2="740" stroke="#d32f2f" stroke-width="4"/>
+  <text x="110" y="340" font-size="10" font-weight="bold" fill="#d32f2f">+5V BUS</text>
+
+  <!-- GND母线 -->
+  <line x1="180" y1="345" x2="180" y2="740" stroke="#212121" stroke-width="4"/>
+  <text x="185" y="360" font-size="10" font-weight="bold" fill="#212121">GND BUS</text>
+
+  <!-- 充电头GND直连 -->
+  <line x1="155" y1="135" x2="180" y2="135" stroke="#212121" stroke-width="2"/>
+  <line x1="180" y1="135" x2="180" y2="345" stroke="#212121" stroke-width="2"/>
+
+  <!-- C1 GND连接 -->
+  <line x1="125" y1="305" x2="180" y2="305" stroke="#212121" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+  <!-- ==================== ESP32 主控区 ==================== -->
+  <rect x="370" y="45" width="260" height="420" rx="8" fill="#e8eaf6" stroke="#283593" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="500" y="72" text-anchor="middle" font-size="14" font-weight="bold" fill="#283593">ESP32-WROOM-32</text>
+  <text x="500" y="88" text-anchor="middle" font-size="9" fill="#666">MCU 主控板</text>
+
+  <!-- ESP32引脚标注 (左侧) -->
+  <text x="385" y="115" font-size="9" font-weight="bold" fill="#c62828">VIN ← +5V</text>
+  <text x="385" y="135" font-size="9" font-weight="bold" fill="#ef6c00">3V3 → +3.3V OUT</text>
+  <text x="385" y="155" font-size="9" font-weight="bold" fill="#212121">GND ← GND</text>
+  <text x="385" y="180" font-size="9" font-weight="bold" fill="#1565c0">GPIO21 → SDA</text>
+  <text x="385" y="200" font-size="9" font-weight="bold" fill="#f9a825">GPIO22 → SCL</text>
+  <text x="385" y="225" font-size="9" font-weight="bold" fill="#2e7d32">GPIO34 ← NH₃ ADC</text>
+  <text x="385" y="250" font-size="9" fill="#666">GPIO25 → PWM(预留)</text>
+  <text x="385" y="270" font-size="9" fill="#666">GPIO26 ← TACH(预留)</text>
+  <text x="385" y="295" font-size="9" fill="#666">GPIO2 → LED(板载)</text>
+
+  <!-- ESP32功能分区标注 -->
+  <rect x="390" y="100" width="220" height="70" rx="3" fill="none" stroke="#c62828" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="395" y="112" font-size="8" fill="#c62828">电源区</text>
+  <rect x="390" y="175" width="220" height="35" rx="3" fill="none" stroke="#1565c0" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="395" y="187" font-size="8" fill="#1565c0">I²C总线</text>
+  <rect x="390" y="215" width="220" height="30" rx="3" fill="none" stroke="#2e7d32" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="395" y="227" font-size="8" fill="#2e7d32">ADC输入</text>
+  <rect x="390" y="250" width="220" height="55" rx="3" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="395" y="262" font-size="8" fill="#999">扩展预留</text>
+
+  <!-- ESP32内部方框 -->
+  <rect x="420" y="320" width="160" height="60" rx="5" fill="#fff" stroke="#283593" stroke-width="1.5"/>
+  <text x="500" y="345" text-anchor="middle" font-size="10" font-weight="bold">Wi-Fi + MQTT</text>
+  <text x="500" y="365" text-anchor="middle" font-size="9" fill="#666">sensors/food → Broker</text>
+
+  <!-- ESP32 USB口标注 -->
+  <rect x="470" y="465" width="60" height="20" rx="2" fill="#f5f5f5" stroke="#999" stroke-width="1"/>
+  <text x="500" y="479" text-anchor="middle" font-size="8">USB-C</text>
+
+  <!-- ESP32 → 电源母线连接 -->
+  <!-- VIN → 5V -->
+  <path d="M375,110 L270,110 L270,395 L105,395" stroke="#d32f2f" stroke-width="2.5" fill="none"/>
+  <circle cx="105" cy="395" r="4" fill="#d32f2f"/>
+
+  <!-- GND -->
+  <path d="M375,150 L280,150 L280,420 L180,420" stroke="#212121" stroke-width="2.5" fill="none"/>
+  <circle cx="180" cy="420" r="4" fill="#212121"/>
+
+  <!-- 3.3V输出线 -->
+  <path d="M375,130 L250,130" stroke="#ef6c00" stroke-width="2" fill="none"/>
+  <text x="260" y="125" font-size="8" fill="#ef6c00">3.3V → 传感器VCC</text>
+
+  <!-- ==================== I²C传感器区域 ==================== -->
+  <rect x="680" y="45" width="400" height="250" rx="6" fill="#f3e5f5" stroke="#7b1fa2" stroke-dasharray="5,3"/>
+  <text x="690" y="65" font-size="12" font-weight="bold" fill="#7b1fa2">I²C 数字传感器 (地址: 0x76 + 0x58)</text>
+
+  <!-- BME680 -->
+  <rect x="700" y="80" width="180" height="85" rx="5" fill="#e1f5fe" stroke="#0277bd" stroke-width="2" filter="url(#shadow)"/>
+  <text x="790" y="102" text-anchor="middle" font-size="12" font-weight="bold" fill="#0277bd">U2 BME680</text>
+  <text x="790" y="118" text-anchor="middle" font-size="9" fill="#666">温湿度+气压+VOC</text>
+  <text x="790" y="132" text-anchor="middle" font-size="8" fill="#999">I²C: 0x76 | VCC: 3.3V</text>
+  <text x="790" y="148" text-anchor="middle" font-size="8" fill="#999">SDA(蓝) SCL(黄) VCC(橙) GND(黑)</text>
+
+  <!-- SGP30 -->
+  <rect x="700" y="185" width="180" height="85" rx="5" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" filter="url(#shadow)"/>
+  <text x="790" y="207" text-anchor="middle" font-size="12" font-weight="bold" fill="#2e7d32">U3 SGP30</text>
+  <text x="790" y="223" text-anchor="middle" font-size="9" fill="#666">TVOC + eCO₂</text>
+  <text x="790" y="237" text-anchor="middle" font-size="8" fill="#999">I²C: 0x58 | VCC: 3.3V</text>
+  <text x="790" y="253" text-anchor="middle" font-size="8" fill="#999">SDA(蓝) SCL(黄) VCC(橙) GND(黑)</text>
+
+  <!-- I²C总线连线 ESP32 → BME680 → SGP30 -->
+  <!-- SDA -->
+  <path d="M610,180 L640,180 L640,95 L700,95" stroke="#1565c0" stroke-width="2" fill="none"/>
+  <line x1="640" y1="95" x2="640" y2="200" stroke="#1565c0" stroke-width="2"/>
+  <line x1="640" y1="200" x2="700" y2="200" stroke="#1565c0" stroke-width="2"/>
+  <circle cx="640" cy="95" r="3" fill="#1565c0"/>
+  <circle cx="640" cy="200" r="3" fill="#1565c0"/>
+  <text x="645" y="150" font-size="8" fill="#1565c0" font-weight="bold">SDA (蓝)</text>
+
+  <!-- SCL -->
+  <path d="M610,200 L655,200 L655,115 L700,115" stroke="#f9a825" stroke-width="2" fill="none"/>
+  <line x1="655" y1="115" x2="655" y2="220" stroke="#f9a825" stroke-width="2"/>
+  <line x1="655" y1="220" x2="700" y2="220" stroke="#f9a825" stroke-width="2"/>
+  <circle cx="655" cy="115" r="3" fill="#f9a825"/>
+  <circle cx="655" cy="220" r="3" fill="#f9a825"/>
+  <text x="660" y="170" font-size="8" fill="#f9a825" font-weight="bold">SCL (黄)</text>
+
+  <!-- 3.3V → 传感器VCC -->
+  <path d="M250,130 L250,75 L670,75 L670,90 L700,90" stroke="#ef6c00" stroke-width="1.5" fill="none"/>
+  <line x1="670" y1="90" x2="670" y2="195" stroke="#ef6c00" stroke-width="1.5"/>
+  <line x1="670" y1="195" x2="700" y2="195" stroke="#ef6c00" stroke-width="1.5"/>
+  <circle cx="670" cy="90" r="2.5" fill="#ef6c00"/>
+  <circle cx="670" cy="195" r="2.5" fill="#ef6c00"/>
+  <text x="460" y="70" font-size="8" fill="#ef6c00">+3.3V (橙)</text>
+
+  <!-- 传感器GND → 公共地 -->
+  <path d="M700,155 L680,155 L680,170" stroke="#212121" stroke-width="1.5" fill="none"/>
+  <path d="M700,260 L680,260 L680,170" stroke="#212121" stroke-width="1.5" fill="none"/>
+  <path d="M680,170 L680,440 L180,440" stroke="#212121" stroke-width="2" fill="none"/>
+  <circle cx="680" cy="170" r="2.5" fill="#212121"/>
+  <circle cx="180" cy="440" r="4" fill="#212121"/>
+
+  <!-- ==================== MQ-137 模拟传感器区域 ==================== -->
+  <rect x="680" y="320" width="400" height="180" rx="6" fill="#fff3e0" stroke="#ef6c00" stroke-dasharray="5,3"/>
+  <text x="690" y="340" font-size="12" font-weight="bold" fill="#ef6c00">模拟传感器 (ADC)</text>
+
+  <!-- MQ-137 -->
+  <rect x="700" y="355" width="200" height="100" rx="5" fill="#fff8e1" stroke="#ef6c00" stroke-width="2" filter="url(#shadow)"/>
+  <text x="800" y="380" text-anchor="middle" font-size="12" font-weight="bold" fill="#ef6c00">U4 MQ-137</text>
+  <text x="800" y="396" text-anchor="middle" font-size="9" fill="#666">氨气传感器 NH₃ 5~200ppm</text>
+  <text x="800" y="412" text-anchor="middle" font-size="8" fill="#999">AO(绿) VCC(红,5V) GND(黑)</text>
+  <text x="800" y="428" text-anchor="middle" font-size="8" fill="#999">加热器: 5V/29Ω ≈ 0.9W | 预热≥60s</text>
+  <text x="800" y="444" text-anchor="middle" font-size="8" fill="#c62828">⚠ VCC 必须接 5V，不可接 3.3V</text>
+
+  <!-- MQ-137 AO → ESP32 GPIO34 -->
+  <path d="M610,225 L630,225 L630,370 L700,370" stroke="#2e7d32" stroke-width="2" fill="none"/>
+  <text x="660" y="290" font-size="8" fill="#2e7d32" font-weight="bold">ADC (绿)</text>
+  <text x="660" y="302" font-size="7" fill="#2e7d32">GPIO34 / ADC1_CH6</text>
+
+  <!-- 滤波电容 C2 -->
+  <rect x="640" y="320" width="50" height="25" rx="2" fill="#fce4ec" stroke="#c62828" stroke-width="1"/>
+  <text x="665" y="337" text-anchor="middle" font-size="7" fill="#c62828">C2 100nF</text>
+  <line x1="665" y1="345" x2="665" y2="370" stroke="#212121" stroke-width="1"/>
+  <line x1="665" y1="320" x2="630" y2="320" stroke="#2e7d32" stroke-width="1"/>
+  <line x1="630" y1="320" x2="630" y2="225" stroke="#2e7d32" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- MQ-137 VCC → 5V母线 -->
+  <path d="M700,395 L660,395 L660,460" stroke="#d32f2f" stroke-width="2.5" fill="none"/>
+  <path d="M660,460 L105,460" stroke="#d32f2f" stroke-width="2.5" fill="none"/>
+  <circle cx="105" cy="460" r="4" fill="#d32f2f"/>
+  <text x="380" y="455" font-size="8" fill="#d32f2f">+5V (红) → MQ-137 VCC</text>
+
+  <!-- MQ-137 GND -->
+  <path d="M700,440 L680,440 L680,475" stroke="#212121" stroke-width="2" fill="none"/>
+  <path d="M680,475 L180,475" stroke="#212121" stroke-width="2.5" fill="none"/>
+  <circle cx="180" cy="475" r="4" fill="#212121"/>
+
+  <!-- ==================== 风扇区域 ==================== -->
+  <rect x="680" y="530" width="400" height="170" rx="6" fill="#e0f2f1" stroke="#00695c" stroke-dasharray="5,3"/>
+  <text x="690" y="550" font-size="12" font-weight="bold" fill="#00695c">执行器 (风扇)</text>
+
+  <!-- SW2 风扇开关 -->
+  <rect x="700" y="565" width="100" height="35" rx="3" fill="#fff3e0" stroke="#ef6c00" stroke-width="1.5"/>
+  <text x="750" y="587" text-anchor="middle" font-size="10" font-weight="bold">SW2 风扇开关</text>
+
+  <!-- M1 进风风扇 -->
+  <circle cx="930" cy="585" r="32" fill="#e0f2f1" stroke="#00695c" stroke-width="2"/>
+  <text x="930" y="582" text-anchor="middle" font-size="11" font-weight="bold" fill="#00695c">M1</text>
+  <text x="930" y="596" text-anchor="middle" font-size="8" fill="#00695c">进风</text>
+
+  <!-- SW2 → M1 -->
+  <line x1="800" y1="582" x2="898" y2="582" stroke="#d32f2f" stroke-width="2"/>
+  <text x="830" y="575" font-size="8" fill="#d32f2f">+5V (红)</text>
+
+  <!-- M1 GND -->
+  <path d="M930,553 L930,510 L180,510" stroke="#212121" stroke-width="2" fill="none"/>
+  <circle cx="180" cy="510" r="4" fill="#212121"/>
+  <text x="560" y="505" font-size="8" fill="#212121">GND (黑)</text>
+
+  <!-- SW2 5V输入 -->
+  <path d="M700,582 L660,582 L660,500 L105,500" stroke="#d32f2f" stroke-width="2" fill="none"/>
+  <circle cx="105" cy="500" r="4" fill="#d32f2f"/>
+  <text x="380" y="495" font-size="8" fill="#d32f2f">+5V BUS (红) → SW2</text>
+
+  <!-- ==================== LED指示灯 ==================== -->
+  <rect x="35" y="540" width="180" height="80" rx="5" fill="#fce4ec" stroke="#c62828" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="125" y="565" text-anchor="middle" font-size="11" font-weight="bold" fill="#c62828">LED 电源指示</text>
+  <text x="125" y="582" text-anchor="middle" font-size="9" fill="#666">D1: 红色LED + R1: 150Ω</text>
+  <text x="125" y="597" text-anchor="middle" font-size="8" fill="#999">5V → R1(150Ω) → D1 → GND</text>
+
+  <!-- LED连接 -->
+  <line x1="35" y1="580" x2="105" y2="580" stroke="#d32f2f" stroke-width="1.5"/>
+  <path d="M105,580 L105,520 L105,520" stroke="#d32f2f" stroke-width="1.5" fill="none"/>
+  <circle cx="105" cy="520" r="3" fill="#d32f2f"/>
+  <line x1="215" y1="580" x2="215" y2="580" stroke="#212121" stroke-width="1.5"/>
+
+  <!-- ==================== 端子排标注 ==================== -->
+  <!-- TB1 -->
+  <rect x="30" y="660" width="130" height="85" rx="3" fill="#f5f5f5" stroke="#666" stroke-width="1.5"/>
+  <text x="95" y="678" text-anchor="middle" font-size="10" font-weight="bold">TB1 电源端子排</text>
+  <text x="40" y="695" font-size="7">X1: +5V IN | X2: GND IN</text>
+  <text x="40" y="708" font-size="7">X3: +5V BUS | X4: +3.3V</text>
+  <text x="40" y="738" font-size="7">4P / 5.08mm间距</text>
+
+  <!-- TB2 -->
+  <rect x="180" y="660" width="160" height="85" rx="3" fill="#f5f5f5" stroke="#666" stroke-width="1.5"/>
+  <text x="260" y="678" text-anchor="middle" font-size="10" font-weight="bold">TB2 信号端子排</text>
+  <text x="190" y="695" font-size="7">X6: SDA(蓝) X7: SCL(黄)</text>
+  <text x="190" y="708" font-size="7">X8: ADC(绿) X9: ADC GND</text>
+  <text x="190" y="721" font-size="7">X10: 3.3V X11: 5V X12: SGND</text>
+  <text x="190" y="738" font-size="7">X13: 预留 | 8P / 5.08mm间距</text>
+
+  <!-- TB3 -->
+  <rect x="360" y="660" width="160" height="85" rx="3" fill="#f5f5f5" stroke="#666" stroke-width="1.5"/>
+  <text x="440" y="678" text-anchor="middle" font-size="10" font-weight="bold">TB3 风扇端子排</text>
+  <text x="370" y="695" font-size="7">X14: FAN +5V</text>
+  <text x="370" y="708" font-size="7">X15: FAN GND</text>
+  <text x="370" y="738" font-size="7">2P / 5.08mm间距</text>
+
+  <!-- ==================== 滤波电容标注 ==================== -->
+
+  <!-- ==================== MQTT 无线传输标注 ==================== -->
+  <path d="M500,467 L500,530 L600,530" stroke="#7b1fa2" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+  <rect x="600" y="515" width="140" height="40" rx="8" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="670" y="533" text-anchor="middle" font-size="9" font-weight="bold" fill="#7b1fa2">MQTT / Wi-Fi</text>
+  <text x="670" y="548" text-anchor="middle" font-size="8" fill="#7b1fa2">→ Jetson Broker</text>
+  <text x="510" y="520" font-size="8" fill="#7b1fa2">无线</text>
+
+  <!-- 接地图标 -->
+  <g transform="translate(180,740)">
+    <line x1="0" y1="0" x2="0" y2="8" stroke="#212121" stroke-width="2"/>
+    <line x1="-10" y1="8" x2="10" y2="8" stroke="#212121" stroke-width="2"/>
+    <line x1="-6" y1="12" x2="6" y2="12" stroke="#212121" stroke-width="1.5"/>
+    <line x1="-3" y1="16" x2="3" y2="16" stroke="#212121" stroke-width="1"/>
+  </g>
+  <text x="160" y="765" font-size="8" fill="#212121">PE 保护地</text>
+
+</svg>
+<div class="frame-title">
+  图号: FSM-EWD-001 | 食品腐败风险预测系统总接线图<br>
+  比例: 示意 | 日期: 2026-07-14 | V1.0
+</div>
+</div>
+
+<!-- ===== 5. 电源子系统详图 ===== -->
+<h2 id="sec5" class="section-break">五、电源子系统接线详图</h2>
+
+<div class="drawing-frame">
+<svg viewBox="0 0 1100 420" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">
+  <text x="20" y="25" font-size="14" font-weight="bold">图 5-1 电源子系统接线详图 (Power Subsystem Detail)</text>
+
+  <!-- 5V/3A 充电头 P1 -->
+  <rect x="30" y="60" width="150" height="80" rx="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="105" y="85" text-anchor="middle" font-size="13" font-weight="bold">P1</text>
+  <text x="105" y="103" text-anchor="middle" font-size="11">5V/3A 充电头</text>
+  <text x="105" y="120" text-anchor="middle" font-size="9" fill="#666">USB 电源适配器</text>
+  <text x="105" y="133" text-anchor="middle" font-size="8" fill="#999">USB-A/C 接口</text>
+
+  <!-- +5V 输出线 (充电头→SW1) -->
+  <line x1="180" y1="90" x2="240" y2="90" stroke="#d32f2f" stroke-width="3"/>
+  <text x="195" y="82" font-size="9" fill="#d32f2f" font-weight="bold">+5V</text>
+  <text x="195" y="107" font-size="8" fill="#d32f2f">红色 20AWG</text>
+
+  <!-- GND 输出线 -->
+  <line x1="180" y1="120" x2="240" y2="120" stroke="#212121" stroke-width="3"/>
+  <text x="195" y="140" font-size="8" fill="#212121">黑色 20AWG</text>
+
+  <!-- SW1 总开关 -->
+  <rect x="240" y="70" width="110" height="70" rx="4" fill="#fff3e0" stroke="#ef6c00" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="295" y="95" text-anchor="middle" font-size="12" font-weight="bold">SW1</text>
+  <text x="295" y="112" text-anchor="middle" font-size="9">1P2T 拨动开关</text>
+  <text x="295" y="128" text-anchor="middle" font-size="8" fill="#666">3A/125VAC</text>
+  <!-- 开关符号 -->
+  <line x1="260" y1="90" x2="280" y2="90" stroke="#333" stroke-width="1.5"/>
+  <line x1="280" y1="90" x2="310" y2="78" stroke="#333" stroke-width="1.5"/>
+  <line x1="310" y1="90" x2="330" y2="90" stroke="#333" stroke-width="1.5"/>
+  <circle cx="280" cy="90" r="2" fill="#333"/>
+  <circle cx="310" cy="90" r="2" fill="#333"/>
+
+  <!-- SW1 → PTC -->
+  <line x1="350" y1="90" x2="430" y2="90" stroke="#d32f2f" stroke-width="3"/>
+  <text x="375" y="82" font-size="9" fill="#d32f2f" font-weight="bold">+5V</text>
+
+  <!-- PTC 保险丝 -->
+  <rect x="430" y="65" width="120" height="55" rx="4" fill="#fce4ec" stroke="#c62828" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="490" y="88" text-anchor="middle" font-size="11" font-weight="bold">F1 PTC</text>
+  <text x="490" y="103" text-anchor="middle" font-size="9">保持1.1A / 触发2A</text>
+  <text x="490" y="115" text-anchor="middle" font-size="8" fill="#666">0ZCG0110FF2C</text>
+
+  <!-- PTC → C1 -->
+  <line x1="550" y1="90" x2="620" y2="90" stroke="#d32f2f" stroke-width="3"/>
+
+  <!-- C1 电解电容 (5V输入滤波) -->
+  <rect x="620" y="65" width="80" height="55" rx="4" fill="#fff" stroke="#c62828" stroke-width="2" filter="url(#shadow)"/>
+  <text x="660" y="85" text-anchor="middle" font-size="10" font-weight="bold">C1</text>
+  <text x="660" y="100" text-anchor="middle" font-size="9">10μF/25V</text>
+  <text x="660" y="115" text-anchor="middle" font-size="8" fill="#666">电解电容</text>
+  <!-- C1 极性标记 -->
+  <text x="630" y="80" font-size="9" fill="#d32f2f" font-weight="bold">+</text>
+  <text x="630" y="115" font-size="9" fill="#212121" font-weight="bold">−</text>
+
+  <!-- C1 → 5V BUS -->
+  <line x1="700" y1="90" x2="800" y2="90" stroke="#d32f2f" stroke-width="3"/>
+
+  <!-- 5V BUS -->
+  <line x1="800" y1="90" x2="1050" y2="90" stroke="#d32f2f" stroke-width="5"/>
+  <text x="950" y="82" font-size="12" font-weight="bold" fill="#d32f2f">+5V BUS</text>
+  <text x="950" y="107" font-size="9" fill="#d32f2f">5.0V ± 0.1V / 充电头额定3A</text>
+
+  <!-- GND BUS -->
+  <line x1="180" y1="120" x2="1050" y2="120" stroke="#212121" stroke-width="5"/>
+  <text x="950" y="112" font-size="12" font-weight="bold" fill="#212121">GND BUS</text>
+
+  <!-- C1 GND -->
+  <line x1="660" y1="120" x2="660" y2="120" stroke="#212121" stroke-width="2"/>
+
+  <!-- 负载分支 -->
+  <text x="30" y="200" font-size="12" font-weight="bold">负载分支 (从 5V/GND 母线引出):</text>
+
+  <!-- 分支1: ESP32 VIN -->
+  <rect x="50" y="220" width="200" height="45" rx="3" fill="#e8eaf6" stroke="#283593" stroke-width="1.5"/>
+  <text x="150" y="240" text-anchor="middle" font-size="10" font-weight="bold">ESP32 VIN (+5V)</text>
+  <text x="150" y="255" text-anchor="middle" font-size="8" fill="#666">红色 20AWG | 约120mA (Wi-Fi发射峰值~240mA)</text>
+  <line x1="150" y1="220" x2="150" y2="190" stroke="#d32f2f" stroke-width="2"/>
+  <line x1="150" y1="190" x2="950" y2="190" stroke="#d32f2f" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- 分支2: MQ-137 VCC -->
+  <rect x="300" y="220" width="200" height="45" rx="3" fill="#fff8e1" stroke="#ef6c00" stroke-width="1.5"/>
+  <text x="400" y="240" text-anchor="middle" font-size="10" font-weight="bold">MQ-137 VCC (+5V)</text>
+  <text x="400" y="255" text-anchor="middle" font-size="8" fill="#666">红色 20AWG | 约180mA (加热器)</text>
+  <line x1="400" y1="220" x2="400" y2="190" stroke="#d32f2f" stroke-width="2"/>
+  <circle cx="400" cy="190" r="2.5" fill="#d32f2f"/>
+
+  <!-- 分支3: 风扇 M1 -->
+  <rect x="550" y="220" width="200" height="45" rx="3" fill="#e0f2f1" stroke="#00695c" stroke-width="1.5"/>
+  <text x="650" y="240" text-anchor="middle" font-size="10" font-weight="bold">风扇 M1 (+5V)</text>
+  <text x="650" y="255" text-anchor="middle" font-size="8" fill="#666">红色 20AWG | 约150mA</text>
+  <line x1="650" y1="220" x2="650" y2="190" stroke="#d32f2f" stroke-width="2"/>
+  <circle cx="650" cy="190" r="2.5" fill="#d32f2f"/>
+
+  <!-- 分支4: 3.3V -->
+  <rect x="800" y="220" width="230" height="45" rx="3" fill="#fff3e0" stroke="#ef6c00" stroke-width="1.5"/>
+  <text x="915" y="240" text-anchor="middle" font-size="10" font-weight="bold">ESP32 3V3 → BME680+SGP30</text>
+  <text x="915" y="255" text-anchor="middle" font-size="8" fill="#666">橙色 22AWG | 约60mA (ESP32 LDO输出)</text>
+
+  <!-- 电流汇总 -->
+  <rect x="50" y="290" width="600" height="110" rx="5" fill="#fafafa" stroke="#666" stroke-width="1.5"/>
+  <text x="70" y="315" font-size="12" font-weight="bold">5V 母线电流预算:</text>
+  <text x="70" y="340" font-size="10">ESP32 (Wi-Fi峰值): ~240mA</text>
+  <text x="70" y="358" font-size="10">MQ-137 加热器: ~180mA</text>
+  <text x="70" y="376" font-size="10">风扇 M1: ~150mA</text>
+  <text x="70" y="394" font-size="10" font-weight="bold">合计: ~570mA | 电源余量: 3A - 0.57A = 2.43A (余量426%)</text>
+  <text x="500" y="340" font-size="10" fill="#2e7d32" font-weight="bold">✓ 余量充足</text>
+  <text x="500" y="358" font-size="9" fill="#2e7d32">5V/3A充电头直供</text>
+  <text x="500" y="376" font-size="9" fill="#2e7d32">无需DC-DC降压</text>
+
+</svg>
+<div class="frame-title">
+  图号: FSM-EWD-002 | 电源子系统详图<br>
+  比例: 示意 | 日期: 2026-07-14 | V1.0
+</div>
+</div>
+
+<!-- ===== 6. I²C 接线详图 ===== -->
+<h2 id="sec6">六、I²C 数字传感器接线详图</h2>
+
+<div class="drawing-frame">
+<svg viewBox="0 0 1100 500" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">
+  <text x="20" y="25" font-size="14" font-weight="bold">图 6-1 I²C 总线接线详图 (I²C Bus Detail)</text>
+
+  <!-- ESP32 I²C 区域 -->
+  <rect x="30" y="50" width="250" height="200" rx="8" fill="#e8eaf6" stroke="#283593" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="155" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#283593">ESP32-WROOM-32</text>
+
+  <!-- GPIO21/22 引脚 -->
+  <rect x="280" y="95" width="70" height="30" rx="3" fill="#bbdefb" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="315" y="115" text-anchor="middle" font-size="9" font-weight="bold">GPIO21</text>
+  <rect x="280" y="140" width="70" height="30" rx="3" fill="#fff9c4" stroke="#f9a825" stroke-width="1.5"/>
+  <text x="315" y="160" text-anchor="middle" font-size="9" font-weight="bold">GPIO22</text>
+
+  <!-- 3.3V 输出 -->
+  <rect x="280" y="185" width="70" height="30" rx="3" fill="#ffe0b2" stroke="#ef6c00" stroke-width="1.5"/>
+  <text x="315" y="205" text-anchor="middle" font-size="9" font-weight="bold">3V3 OUT</text>
+
+  <!-- GND -->
+  <rect x="280" y="225" width="70" height="30" rx="3" fill="#e0e0e0" stroke="#212121" stroke-width="1.5"/>
+  <text x="315" y="245" text-anchor="middle" font-size="9" font-weight="bold">GND</text>
+
+  <!-- SDA 总线 (蓝色) -->
+  <line x1="350" y1="110" x2="550" y2="110" stroke="#1565c0" stroke-width="3"/>
+  <!-- SDA 分支点 -->
+  <circle cx="550" cy="110" r="5" fill="#1565c0"/>
+  <!-- SDA → BME680 -->
+  <line x1="550" y1="110" x2="550" y2="140" stroke="#1565c0" stroke-width="2"/>
+  <line x1="550" y1="140" x2="630" y2="140" stroke="#1565c0" stroke-width="2"/>
+  <!-- SDA → SGP30 -->
+  <line x1="550" y1="110" x2="550" y2="340" stroke="#1565c0" stroke-width="2"/>
+  <line x1="550" y1="340" x2="630" y2="340" stroke="#1565c0" stroke-width="2"/>
+
+  <text x="430" y="100" font-size="10" font-weight="bold" fill="#1565c0">SDA 数据线 (蓝色 24AWG)</text>
+
+  <!-- SCL 总线 (黄色) -->
+  <line x1="350" y1="155" x2="570" y2="155" stroke="#f9a825" stroke-width="3"/>
+  <circle cx="570" cy="155" r="5" fill="#f9a825"/>
+  <!-- SCL → BME680 -->
+  <line x1="570" y1="155" x2="570" y2="160" stroke="#f9a825" stroke-width="2"/>
+  <line x1="570" y1="160" x2="630" y2="160" stroke="#f9a825" stroke-width="2"/>
+  <!-- SCL → SGP30 -->
+  <line x1="570" y1="155" x2="570" y2="360" stroke="#f9a825" stroke-width="2"/>
+  <line x1="570" y1="360" x2="630" y2="360" stroke="#f9a825" stroke-width="2"/>
+
+  <text x="430" y="145" font-size="10" font-weight="bold" fill="#f9a825">SCL 时钟线 (黄色 24AWG)</text>
+
+  <!-- 3.3V 供电线 -->
+  <line x1="350" y1="200" x2="590" y2="200" stroke="#ef6c00" stroke-width="2"/>
+  <circle cx="590" cy="200" r="4" fill="#ef6c00"/>
+  <line x1="590" y1="200" x2="590" y2="120" stroke="#ef6c00" stroke-width="1.5"/>
+  <line x1="590" y1="120" x2="630" y2="120" stroke="#ef6c00" stroke-width="1.5"/>
+  <line x1="590" y1="200" x2="590" y2="320" stroke="#ef6c00" stroke-width="1.5"/>
+  <line x1="590" y1="320" x2="630" y2="320" stroke="#ef6c00" stroke-width="1.5"/>
+  <text x="460" y="195" font-size="9" fill="#ef6c00" font-weight="bold">+3.3V (橙 22AWG)</text>
+
+  <!-- GND -->
+  <line x1="350" y1="240" x2="610" y2="240" stroke="#212121" stroke-width="2"/>
+  <circle cx="610" cy="240" r="4" fill="#212121"/>
+  <line x1="610" y1="240" x2="610" y2="175" stroke="#212121" stroke-width="1.5"/>
+  <line x1="610" y1="175" x2="630" y2="175" stroke="#212121" stroke-width="1.5"/>
+  <line x1="610" y1="240" x2="610" y2="375" stroke="#212121" stroke-width="1.5"/>
+  <line x1="610" y1="375" x2="630" y2="375" stroke="#212121" stroke-width="1.5"/>
+
+  <!-- BME680 模块 -->
+  <rect x="630" y="95" width="220" height="100" rx="6" fill="#e1f5fe" stroke="#0277bd" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="740" y="118" text-anchor="middle" font-size="13" font-weight="bold" fill="#0277bd">U2 BME680</text>
+  <text x="740" y="135" text-anchor="middle" font-size="10">Bosch 4合1环境传感器</text>
+  <text x="740" y="152" text-anchor="middle" font-size="9" fill="#666">I²C地址: 0x76 (SDO=GND)</text>
+  <text x="740" y="168" text-anchor="middle" font-size="9" fill="#666">VCC: 1.71~3.6V | 电流: ~12mA</text>
+  <text x="740" y="184" text-anchor="middle" font-size="8" fill="#999">板载10kΩ上拉电阻 (SDA/SCL)</text>
+
+  <!-- BME680引脚标注 -->
+  <text x="635" y="125" font-size="8" fill="#ef6c00">VCC ←</text>
+  <text x="635" y="145" font-size="8" fill="#1565c0">SDA ←</text>
+  <text x="635" y="158" font-size="8" fill="#f9a825">SCL ←</text>
+  <text x="635" y="178" font-size="8" fill="#212121">GND ←</text>
+
+  <!-- SGP30 模块 -->
+  <rect x="630" y="295" width="220" height="100" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="740" y="318" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">U3 SGP30</text>
+  <text x="740" y="335" text-anchor="middle" font-size="10">Sensirion 空气质量传感器</text>
+  <text x="740" y="352" text-anchor="middle" font-size="9" fill="#666">I²C地址: 0x58</text>
+  <text x="740" y="368" text-anchor="middle" font-size="9" fill="#666">VCC: 1.62~3.6V | 电流: ~48mA</text>
+  <text x="740" y="384" text-anchor="middle" font-size="8" fill="#999">板载10kΩ上拉电阻 (SDA/SCL)</text>
+
+  <!-- SGP30引脚标注 -->
+  <text x="635" y="325" font-size="8" fill="#ef6c00">VCC ←</text>
+  <text x="635" y="345" font-size="8" fill="#1565c0">SDA ←</text>
+  <text x="635" y="365" font-size="8" fill="#f9a825">SCL ←</text>
+  <text x="635" y="380" font-size="8" fill="#212121">GND ←</text>
+
+  <!-- 上拉电阻说明 -->
+  <rect x="880" y="100" width="200" height="150" rx="5" fill="#fafafa" stroke="#666" stroke-width="1.5"/>
+  <text x="890" y="120" font-size="11" font-weight="bold">上拉电阻分析:</text>
+  <text x="890" y="140" font-size="9">BME680 板载: 10kΩ (SDA/SCL)</text>
+  <text x="890" y="155" font-size="9">SGP30 板载: 10kΩ (SDA/SCL)</text>
+  <text x="890" y="175" font-size="9">并联等效: 5kΩ</text>
+  <text x="890" y="195" font-size="9" fill="#2e7d32" font-weight="bold">✓ 在 I²C 规范内</text>
+  <text x="890" y="215" font-size="9">I²C 标准模式: ≥1kΩ</text>
+  <text x="890" y="230" font-size="9">I²C 快速模式: ≥1kΩ</text>
+  <text x="890" y="245" font-size="8" fill="#c62828">总线长度 &gt;30cm 时加 4.7kΩ 外置上拉</text>
+
+  <!-- I²C 协议说明 -->
+  <rect x="880" y="280" width="200" height="110" rx="5" fill="#fafafa" stroke="#666" stroke-width="1.5"/>
+  <text x="890" y="300" font-size="11" font-weight="bold">I²C 协议参数:</text>
+  <text x="890" y="320" font-size="9">时钟频率: 100kHz (标准)</text>
+  <text x="890" y="335" font-size="9">支持快速模式: 400kHz</text>
+  <text x="890" y="355" font-size="9">7位地址: 0x76 (BME680)</text>
+  <text x="890" y="370" font-size="9">7位地址: 0x58 (SGP30)</text>
+  <text x="890" y="385" font-size="9" fill="#2e7d32" font-weight="bold">✓ 地址不冲突,可共存</text>
+
+  <!-- 信号流向标注 -->
+  <rect x="30" y="420" width="500" height="60" rx="5" fill="#fffde7" stroke="#f9a825" stroke-width="1"/>
+  <text x="40" y="442" font-size="10" font-weight="bold">I²C 信号流向 (双向半双工):</text>
+  <text x="40" y="460" font-size="9">ESP32 (Master) → BME680 (Slave 0x76) | SGP30 (Slave 0x58)</text>
+  <text x="40" y="475" font-size="9">ESP32 发起读/写 → 从机应答 → 返回数据 → ESP32 处理</text>
+</svg>
+<div class="frame-title">
+  图号: FSM-EWD-003 | I²C 总线接线详图<br>
+  比例: 示意 | 日期: 2026-07-14 | V1.0
+</div>
+</div>
+
+<!-- ===== 7. 模拟传感器详图 ===== -->
+<h2 id="sec7">七、模拟传感器 (MQ-137) 接线详图</h2>
+
+<div class="drawing-frame">
+<svg viewBox="0 0 1100 450" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">
+  <text x="20" y="25" font-size="14" font-weight="bold">图 7-1 MQ-137 氨气传感器接线详图 (Analog Sensor Detail)</text>
+
+  <!-- MQ-137 模块详图 -->
+  <rect x="50" y="60" width="350" height="280" rx="8" fill="#fff8e1" stroke="#ef6c00" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="225" y="85" text-anchor="middle" font-size="14" font-weight="bold" fill="#ef6c00">U4 MQ-137 氨气传感器模块</text>
+
+  <!-- 模块内部结构 -->
+  <rect x="80" y="100" width="120" height="80" rx="4" fill="#ffe0b2" stroke="#ef6c00" stroke-width="1.5"/>
+  <text x="140" y="125" text-anchor="middle" font-size="10" font-weight="bold">加热器</text>
+  <text x="140" y="142" text-anchor="middle" font-size="9">5V / 29Ω</text>
+  <text x="140" y="158" text-anchor="middle" font-size="8" fill="#c62828">功耗 ≈ 0.86W</text>
+  <text x="140" y="173" text-anchor="middle" font-size="8" fill="#c62828">预热 ≥ 60s</text>
+
+  <rect x="230" y="100" width="140" height="80" rx="4" fill="#fff3e0" stroke="#ef6c00" stroke-width="1.5"/>
+  <text x="300" y="120" text-anchor="middle" font-size="10" font-weight="bold">传感元件</text>
+  <text x="300" y="138" text-anchor="middle" font-size="9">SnO₂ 半导体</text>
+  <text x="300" y="155" text-anchor="middle" font-size="9">NH₃ 5~200ppm</text>
+  <text x="300" y="170" text-anchor="middle" font-size="8" fill="#666">电阻随气体浓度变化</text>
+
+  <!-- 比较器(板载) -->
+  <rect x="80" y="200" width="140" height="50" rx="4" fill="#f5f5f5" stroke="#999" stroke-width="1"/>
+  <text x="150" y="222" text-anchor="middle" font-size="9">LM393 比较器</text>
+  <text x="150" y="238" text-anchor="middle" font-size="8" fill="#666">DO 数字输出(未使用)</text>
+
+  <!-- 分压电路 -->
+  <rect x="230" y="200" width="140" height="50" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="300" y="222" text-anchor="middle" font-size="9" font-weight="bold">分压电路</text>
+  <text x="300" y="238" text-anchor="middle" font-size="8">AO 模拟输出 0~5V</text>
+
+  <!-- 引脚排 -->
+  <rect x="80" y="280" width="290" height="40" rx="3" fill="#f5f5f5" stroke="#666" stroke-width="1.5"/>
+  <text x="105" y="305" font-size="9" font-weight="bold" fill="#d32f2f">VCC</text>
+  <text x="165" y="305" font-size="9" font-weight="bold" fill="#212121">GND</text>
+  <text x="225" y="305" font-size="9" font-weight="bold" fill="#2e7d32">AO</text>
+  <text x="285" y="305" font-size="9" fill="#999">DO</text>
+  <text x="335" y="305" font-size="9" fill="#999">(NC)</text>
+
+  <!-- 连接线 -->
+  <!-- VCC → 5V -->
+  <line x1="105" y1="280" x2="105" y2="350" stroke="#d32f2f" stroke-width="3"/>
+  <text x="60" y="348" font-size="9" fill="#d32f2f" font-weight="bold">+5V</text>
+  <text x="60" y="362" font-size="8" fill="#d32f2f">红色 20AWG</text>
+
+  <!-- GND -->
+  <line x1="165" y1="280" x2="165" y2="350" stroke="#212121" stroke-width="3"/>
+  <text x="135" y="348" font-size="9" fill="#212121" font-weight="bold">GND</text>
+  <text x="135" y="362" font-size="8" fill="#212121">黑色 20AWG</text>
+
+  <!-- AO → ESP32 -->
+  <line x1="225" y1="280" x2="225" y2="350" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="200" y="348" font-size="9" fill="#2e7d32" font-weight="bold">AO</text>
+  <text x="200" y="362" font-size="8" fill="#2e7d32">绿色 22AWG</text>
+
+  <!-- DO (NC) -->
+  <line x1="285" y1="280" x2="285" y2="350" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="270" y="348" font-size="8" fill="#999">DO (未接)</text>
+
+  <!-- 右侧: ESP32 ADC 详图 -->
+  <rect x="550" y="60" width="280" height="250" rx="8" fill="#e8eaf6" stroke="#283593" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="690" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#283593">ESP32 ADC 输入</text>
+
+  <!-- GPIO34 -->
+  <rect x="580" y="110" width="220" height="60" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="690" y="132" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">GPIO34 (ADC1_CH6)</text>
+  <text x="690" y="150" text-anchor="middle" font-size="9" fill="#666">12位分辨率: 0~4095 | 输入专用</text>
+  <text x="690" y="163" text-anchor="middle" font-size="8" fill="#2e7d32">✓ Wi-Fi开启时ADC1仍可正常工作</text>
+
+  <!-- 滤波电路 -->
+  <rect x="580" y="190" width="220" height="70" rx="4" fill="#fafafa" stroke="#666" stroke-width="1.5"/>
+  <text x="690" y="210" text-anchor="middle" font-size="11" font-weight="bold">RC 低通滤波器</text>
+  <text x="690" y="228" text-anchor="middle" font-size="9">C2: 100nF 陶瓷电容 (X7R 0805)</text>
+  <text x="690" y="245" text-anchor="middle" font-size="9">截止频率 ≈ 1/(2π×RC)</text>
+  <text x="690" y="258" text-anchor="middle" font-size="8" fill="#666">AO ←── C2(100nF) ──→ GND</text>
+
+  <!-- AO 连线到 ESP32 -->
+  <path d="M225,350 L225,390 L490,390 L490,140 L580,140" stroke="#2e7d32" stroke-width="2.5" fill="none"/>
+  <text x="370" y="385" font-size="9" fill="#2e7d32" font-weight="bold">AO → GPIO34 (绿色 22AWG)</text>
+
+  <!-- C2 连接示意 -->
+  <rect x="490" y="250" width="60" height="30" rx="2" fill="#fce4ec" stroke="#c62828" stroke-width="1.5"/>
+  <text x="520" y="270" text-anchor="middle" font-size="8" fill="#c62828">C2 100nF</text>
+  <line x1="490" y1="265" x2="490" y2="390" stroke="#2e7d32" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="490" y1="280" x2="490" y2="320" stroke="#212121" stroke-width="1"/>
+  <text x="495" y="315" font-size="7" fill="#212121">GND</text>
+
+  <!-- 技术说明 -->
+  <rect x="860" y="60" width="220" height="300" rx="5" fill="#fffde7" stroke="#f9a825" stroke-width="1.5"/>
+  <text x="870" y="82" font-size="11" font-weight="bold">MQ-137 关键参数:</text>
+  <text x="870" y="102" font-size="9">检测气体: NH₃ (氨气)</text>
+  <text x="870" y="118" font-size="9">检测范围: 5~200ppm</text>
+  <text x="870" y="134" font-size="9">灵敏度: R₀/Rs @ 50ppm</text>
+  <text x="870" y="154" font-size="9">加热电压: 5V±0.1V</text>
+  <text x="870" y="170" font-size="9">加热电阻: 29Ω ±3Ω</text>
+  <text x="870" y="186" font-size="9">加热功耗: ≤0.9W</text>
+  <text x="870" y="206" font-size="9">预热时间: ≥60s (建议120s)</text>
+  <text x="870" y="226" font-size="9">AO输出: 0~5V (线性)</text>
+  <text x="870" y="242" font-size="9">工作温度: -20~50℃</text>
+  <text x="870" y="262" font-size="9">工作湿度: 30~90%RH</text>
+
+  <line x1="870" y1="275" x2="1070" y2="275" stroke="#f9a825" stroke-width="1"/>
+  <text x="870" y="295" font-size="10" font-weight="bold" fill="#c62828">⚠ 安全警告:</text>
+  <text x="870" y="312" font-size="9" fill="#c62828">1. VCC 必须接 5V</text>
+  <text x="870" y="328" font-size="9" fill="#c62828">2. 加热时板面温度高</text>
+  <text x="870" y="344" font-size="9" fill="#c62828">3. ADC线远离加热线</text>
+  <text x="870" y="360" font-size="9" fill="#c62828">4. 预热前数据无效</text>
+</svg>
+<div class="frame-title">
+  图号: FSM-EWD-004 | MQ-137 接线详图<br>
+  比例: 示意 | 日期: 2026-07-14 | V1.0
+</div>
+</div>
+
+<!-- ===== 8. 风扇详图 ===== -->
+<h2 id="sec8">八、风扇与辅助电路接线详图</h2>
+
+<div class="drawing-frame">
+<svg viewBox="0 0 1100 350" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">
+  <text x="20" y="25" font-size="14" font-weight="bold">图 8-1 风扇与辅助电路接线详图 (Fan &amp; Auxiliary Circuit)</text>
+
+  <!-- 5V母线 -->
+  <line x1="50" y1="60" x2="1050" y2="60" stroke="#d32f2f" stroke-width="5"/>
+  <text x="550" y="52" text-anchor="middle" font-size="12" font-weight="bold" fill="#d32f2f">+5V BUS</text>
+  <!-- GND母线 -->
+  <line x1="50" y1="300" x2="1050" y2="300" stroke="#212121" stroke-width="5"/>
+  <text x="550" y="318" text-anchor="middle" font-size="12" font-weight="bold" fill="#212121">GND BUS</text>
+
+  <!-- SW2 风扇开关 -->
+  <rect x="100" y="80" width="120" height="50" rx="4" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" filter="url(#shadow)"/>
+  <text x="160" y="100" text-anchor="middle" font-size="10" font-weight="bold">SW2 风扇开关</text>
+  <text x="160" y="118" text-anchor="middle" font-size="8" fill="#666">1P2T / 3A</text>
+  <line x1="160" y1="80" x2="160" y2="60" stroke="#d32f2f" stroke-width="2"/>
+  <circle cx="160" cy="60" r="4" fill="#d32f2f"/>
+
+  <!-- M1 进风风扇 -->
+  <g transform="translate(320,120)">
+    <circle cx="0" cy="0" r="40" fill="#e0f2f1" stroke="#00695c" stroke-width="2.5"/>
+    <text x="0" y="-8" text-anchor="middle" font-size="13" font-weight="bold" fill="#00695c">M1</text>
+    <text x="0" y="8" text-anchor="middle" font-size="9" fill="#00695c">进风</text>
+    <text x="0" y="22" text-anchor="middle" font-size="7" fill="#666">40×40mm</text>
+    <!-- VCC -->
+    <line x1="0" y1="-40" x2="0" y2="-60" stroke="#d32f2f" stroke-width="2"/>
+    <!-- GND -->
+    <line x1="0" y1="40" x2="0" y2="60" stroke="#212121" stroke-width="2"/>
+    <line x1="0" y1="60" x2="0" y2="80" stroke="#212121" stroke-width="2"/>
+    <circle cx="0" cy="80" r="3" fill="#212121"/>
+  </g>
+  <!-- M1 VCC连SW2 -->
+  <line x1="220" y1="105" x2="280" y2="105" stroke="#d32f2f" stroke-width="2"/>
+  <line x1="280" y1="105" x2="280" y2="60" stroke="#d32f2f" stroke-width="2"/>
+  <line x1="280" y1="60" x2="320" y2="60" stroke="#d32f2f" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="320" y1="60" x2="320" y2="80" stroke="#d32f2f" stroke-width="2"/>
+
+  <!-- M2 排风风扇已删除(改为单风扇方案) -->
+
+  <!-- LED指示灯 -->
+  <g transform="translate(550,100)">
+    <rect x="-40" y="-20" width="180" height="70" rx="4" fill="#fce4ec" stroke="#c62828" stroke-width="2" filter="url(#shadow)"/>
+    <text x="50" y="-2" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">电源指示灯</text>
+    <text x="50" y="15" text-anchor="middle" font-size="9">5V → R1(150Ω) → D1(LED)</text>
+    <text x="50" y="32" text-anchor="middle" font-size="8" fill="#666">If≈20mA | Vf≈2.0V | 红色5mm</text>
+    <line x1="-40" y1="15" x2="-60" y2="15" stroke="#d32f2f" stroke-width="2"/>
+    <line x1="140" y1="15" x2="160" y2="15" stroke="#212121" stroke-width="2"/>
+    <line x1="160" y1="15" x2="160" y2="60" stroke="#212121" stroke-width="2"/>
+    <circle cx="160" cy="60" r="3" fill="#212121"/>
+    <line x1="-60" y1="15" x2="-60" y2="60" stroke="#d32f2f" stroke-width="2"/>
+    <circle cx="-60" cy="60" r="3" fill="#d32f2f"/>
+  </g>
+
+  <!-- 安装位置说明 -->
+  <rect x="500" y="210" width="570" height="90" rx="5" fill="#e0f2f1" stroke="#00695c" stroke-width="1.5"/>
+  <text x="510" y="230" font-size="11" font-weight="bold" fill="#00695c">风扇安装位置 (5L顶空盒):</text>
+  <text x="510" y="248" font-size="9">M1(单风扇): 盒体侧壁上方安装,向内吹</text>
+  <text x="510" y="263" font-size="9">风扇对侧壁下方开 5mm 直径排气孔(被动排气)</text>
+  <text x="510" y="278" font-size="9">主动进风 + 被动排气,实现空气循环</text>
+  <text x="510" y="293" font-size="9" fill="#00695c">风扇功耗: 5V × 150mA = 0.75W</text>
+
+  <!-- GND 连接线 -->
+  <line x1="320" y1="300" x2="500" y2="300" stroke="#212121" stroke-width="3"/>
+</svg>
+<div class="frame-title">
+  图号: FSM-EWD-005 | 风扇与辅助电路详图<br>
+  比例: 示意 | 日期: 2026-07-14 | V1.0
+</div>
+</div>
+
+<!-- ===== 9. 图例说明 ===== -->
+<h2 id="sec9">九、图例说明</h2>
+
+<table>
+<caption>表 9-1 元件图形图例</caption>
+<tr><th>图例</th><th>含义</th><th>说明</th></tr>
+<tr>
+  <td><svg width="80" height="30"><rect x="5" y="5" width="70" height="20" rx="4" fill="#e8eaf6" stroke="#283593" stroke-width="2"/></svg></td>
+  <td>主控/处理器模块</td>
+  <td>蓝色系矩形框,含位号+型号+功能描述</td>
+</tr>
+<tr>
+  <td><svg width="80" height="30"><rect x="5" y="5" width="70" height="20" rx="4" fill="#e1f5fe" stroke="#0277bd" stroke-width="2"/></svg></td>
+  <td>数字传感器模块</td>
+  <td>浅蓝/浅绿矩形框,含位号+型号+I²C地址</td>
+</tr>
+<tr>
+  <td><svg width="80" height="30"><rect x="5" y="5" width="70" height="20" rx="4" fill="#fff8e1" stroke="#ef6c00" stroke-width="2"/></svg></td>
+  <td>模拟传感器模块</td>
+  <td>橙色系矩形框,含位号+型号+输出类型</td>
+</tr>
+<tr>
+  <td><svg width="80" height="30"><rect x="5" y="5" width="70" height="20" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/></svg></td>
+  <td>电源/保护模块</td>
+  <td>绿色系矩形框,含位号+型号+输入输出规格(PTC/C1等)</td>
+</tr>
+<tr>
+  <td><svg width="80" height="30"><rect x="5" y="5" width="70" height="20" rx="3" fill="#fff3e0" stroke="#ef6c00" stroke-width="2"/></svg></td>
+  <td>开关元件</td>
+  <td>橙黄色矩形框,含位号+类型+额定参数</td>
+</tr>
+<tr>
+  <td><svg width="80" height="30"><circle cx="40" cy="15" r="12" fill="#e0f2f1" stroke="#00695c" stroke-width="2"/></svg></td>
+  <td>风扇/电机</td>
+  <td>圆形框,含位号+功能说明</td>
+</tr>
+<tr>
+  <td><svg width="80" height="30"><rect x="5" y="5" width="70" height="20" rx="2" fill="#fce4ec" stroke="#c62828" stroke-width="1.5"/></svg></td>
+  <td>保护/滤波元件</td>
+  <td>粉色矩形框,含位号+参数(PTC/电容等)</td>
+</tr>
+</table>
+
+<table>
+<caption>表 9-2 导线图例</caption>
+<tr><th>线型</th><th>含义</th><th>说明</th></tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#d32f2f" stroke-width="4"/></svg></td>
+  <td>+5V 电源线</td>
+  <td>红色粗线,20AWG (0.5mm²)</td>
+</tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#ef6c00" stroke-width="2"/></svg></td>
+  <td>+3.3V 电源线</td>
+  <td>橙色线,22AWG (0.32mm²)</td>
+</tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#212121" stroke-width="4"/></svg></td>
+  <td>GND 地线</td>
+  <td>黑色粗线,20AWG (0.5mm²)</td>
+</tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#1565c0" stroke-width="2"/></svg></td>
+  <td>I²C SDA 数据线</td>
+  <td>蓝色线,24AWG (0.2mm²)</td>
+</tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#f9a825" stroke-width="2"/></svg></td>
+  <td>I²C SCL 时钟线</td>
+  <td>黄色线,24AWG (0.2mm²)</td>
+</tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#2e7d32" stroke-width="2"/></svg></td>
+  <td>模拟信号线</td>
+  <td>绿色线,22AWG (0.32mm²)</td>
+</tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="5,3"/></svg></td>
+  <td>无线信号 (Wi-Fi/MQTT)</td>
+  <td>紫色虚线,表示无线数据传输</td>
+</tr>
+<tr>
+  <td><svg width="80" height="10"><line x1="5" y1="5" x2="75" y2="5" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/></svg></td>
+  <td>预留/可选连接</td>
+  <td>灰色虚线,表示未连接的预留功能</td>
+</tr>
+</table>
+
+<table>
+<caption>表 9-3 节点符号图例</caption>
+<tr><th>符号</th><th>含义</th></tr>
+<tr>
+  <td><svg width="20" height="20"><circle cx="10" cy="10" r="5" fill="#d32f2f"/></svg></td>
+  <td>电源连接节点 (T型分叉)</td>
+</tr>
+<tr>
+  <td><svg width="20" height="20"><circle cx="10" cy="10" r="5" fill="#212121"/></svg></td>
+  <td>地线连接节点</td>
+</tr>
+<tr>
+  <td><svg width="20" height="20"><circle cx="10" cy="10" r="5" fill="#1565c0"/></svg></td>
+  <td>I²C 总线分支节点</td>
+</tr>
+<tr>
+  <td><svg width="30" height="30"><line x1="15" y1="5" x2="15" y2="13" stroke="#333" stroke-width="2"/><line x1="5" y1="13" x2="25" y2="13" stroke="#333" stroke-width="2"/><line x1="9" y1="17" x2="21" y2="17" stroke="#333" stroke-width="1.5"/><line x1="12" y1="21" x2="18" y2="21" stroke="#333" stroke-width="1"/></svg></td>
+  <td>保护接地 (PE) 符号</td>
+</tr>
+</table>
+
+<!-- ===== 10. 技术注释 ===== -->
+<h2 id="sec10">十、技术注释与施工要求</h2>
+
+<h3>10.1 接线施工要求</h3>
+
+<table>
+<caption>表 10-1 接线施工规范</caption>
+<tr><th>项目</th><th>要求</th><th>标准依据</th></tr>
+<tr><td class="left">导线剥皮长度</td><td>弹簧端子: 8~10mm; 杜邦插针: 5~6mm</td><td>GB/T 4728</td></tr>
+<tr><td class="left">压接端子</td><td>杜邦线压接后抗拉力 ≥ 10N,无裸露铜丝</td><td>IEC 61131-3</td></tr>
+<tr><td class="left">线缆绑扎</td><td>电源线与信号线分束绑扎,间距 ≥ 20mm</td><td>GB/T 4728</td></tr>
+<tr><td class="left">线标标识</td><td>每根导线两端套号码管,标注端子编号(如 X6-SDA)</td><td>GB/T 4728</td></tr>
+<tr><td class="left">走线弯曲半径</td><td>导线弯曲半径 ≥ 线径的 6 倍</td><td>IEC 61131-3</td></tr>
+<tr><td class="left">I²C 总线长度</td><td>≤ 30cm (不加外置上拉); ≤ 1m (加 4.7kΩ 上拉)</td><td>I²C-Bus Spec</td></tr>
+<tr><td class="left">ADC 信号线长度</td><td>≤ 20cm, 远离 5V 电源线和风扇线</td><td>ESP32 Datasheet</td></tr>
+<tr><td class="left">公共接地</td><td>所有 GND 汇聚到单一母线 (星型接地),避免地环路</td><td>GB/T 4728</td></tr>
+</table>
+
+<h3>10.2 上电顺序要求</h3>
+
+<div class="warning">
+  <strong>⚠ 上电顺序(必须严格遵守):</strong><br>
+  1. 确认所有接线无误,万用表检查 5V 与 GND 之间无短路(电阻应 >1kΩ)<br>
+  2. SW1 置于 OFF 位置,接通 5V/3A USB 充电头<br>
+  3. SW1 拨至 ON,5V BUS 建立电压(LED 指示灯亮起)<br>
+  4. 等待 MQ-137 预热 ≥ 60 秒(期间 ADC 读数不稳定,属正常)<br>
+  5. BME680 预热 30 秒,SGP30 IAQ 初始化 15 秒<br>
+  6. SW2 拨至 ON,启动风扇 M1<br>
+  7. 全部预热完成后,ESP32 开始正式采集数据
+</div>
+
+<h3>10.3 关键设计计算</h3>
+
+<table>
+<caption>表 10-2 设计计算书</caption>
+<tr><th>计算项</th><th>公式</th><th>结果</th><th>结论</th></tr>
+<tr>
+  <td class="left">LED限流电阻</td>
+  <td class="left">R = (Vcc - Vf) / If = (5V - 2.0V) / 20mA</td>
+  <td>150Ω</td>
+  <td>✓ 选用 150Ω 1/4W</td>
+</tr>
+<tr>
+  <td class="left">5V总线总电流</td>
+  <td class="left">I = 240mA(ESP32) + 180mA(MQ-137) + 150mA(风扇M1) = 570mA</td>
+  <td>570mA</td>
+  <td>✓ 5V/3A充电头额定3A,余量426%</td>
+</tr>
+<tr>
+  <td class="left">PTC保险丝选型</td>
+  <td class="left">Ihold > Inormal_max = 570mA; Itrigger < Isupply_max = 3A</td>
+  <td>1.1A/2A</td>
+  <td>✓ 正常不触发,过流1.5倍时保护</td>
+</tr>
+<tr>
+  <td class="left">ADC分辨率</td>
+  <td class="left">Vlsb = 5V / 4096 ≈ 1.22mV</td>
+  <td>1.22mV/LSB</td>
+  <td>✓ 足以检测NH₃浓度变化</td>
+</tr>
+<tr>
+  <td class="left">C2滤波截止频率</td>
+  <td class="left">假设R=10kΩ(ESP32输入阻抗): fc = 1/(2π×10k×100nF) ≈ 159Hz</td>
+  <td>~159Hz</td>
+  <td>✓ 有效滤除高频噪声,保留低频信号</td>
+</tr>
+<tr>
+  <td class="left">I²C上拉并联值</td>
+  <td class="left">R_eq = (10kΩ × 10kΩ) / (10kΩ + 10kΩ) = 5kΩ</td>
+  <td>5kΩ</td>
+  <td>✓ 在I²C标准范围(1kΩ~100kΩ)</td>
+</tr>
+</table>
+
+<h3>10.4 故障排查指引</h3>
+
+<table>
+<caption>表 10-3 常见故障排查表</caption>
+<tr><th>故障现象</th><th>可能原因</th><th>排查步骤</th></tr>
+<tr>
+  <td class="left">I²C 扫描不到任何设备</td>
+  <td class="left">SDA/SCL 接反或断线; VCC 未接; 上拉缺失</td>
+  <td class="left">1. 检查 SDA(蓝)/SCL(黄) 是否接对 GPIO21/22<br>2. 万用表测 3.3V 引脚是否有电压<br>3. 示波器查看 SDA/SCL 有无信号</td>
+</tr>
+<tr>
+  <td class="left">只能扫到 BME680,扫不到 SGP30</td>
+  <td class="left">SGP30 未初始化; 地址冲突; 接线松</td>
+  <td class="left">1. 单独接 SGP30 测试<br>2. 检查 SGP30 的 VCC/GND<br>3. 确认 SGP30 IAQ init 命令已发送</td>
+</tr>
+<tr>
+  <td class="left">MQ-137 ADC 值跳动大</td>
+  <td class="left">供电不稳; 加热线干扰; ADC 线太长</td>
+  <td class="left">1. 用独立 5V 给 MQ-137 供电<br>2. ADC 线远离加热线<br>3. 加 100nF 滤波电容<br>4. 软件做移动平均滤波</td>
+</tr>
+<tr>
+  <td class="left">ESP32 频繁重启</td>
+  <td class="left">供电不足; MQ-137 加热导致电压跌落</td>
+  <td class="left">1. 万用表监测 5V 在负载下是否低于 4.5V<br>2. 换 ≥2A 的 USB 充电头(本项目为3A已充足)<br>3. 增加 10μF 电解电容在 ESP32 VIN 端</td>
+</tr>
+<tr>
+  <td class="left">MQTT 连接失败</td>
+  <td class="left">Wi-Fi 未连接; Broker 地址错; 端口被占</td>
+  <td class="left">1. 检查 ESP32 和 PC 在同一 Wi-Fi<br>2. ping Broker IP<br>3. 用 MQTTX 测试 Broker</td>
+</tr>
+</table>
+
+<h3>10.5 安全规范</h3>
+
+<div class="warning">
+  <strong>⚠ 施工安全要求:</strong><br>
+  1. 所有接线操作必须在<strong>断电状态</strong>下进行,严禁带电插拔<br>
+  2. 上电前必须用万用表<strong>确认无短路</strong>(5V与GND之间电阻应 >1kΩ)<br>
+  3. MQ-137 加热时表面温度可达 60℃+,<strong>避免直接触摸</strong><br>
+  4. 实验用食品腐败样本可能产生有害气体,<strong>实验后及时清理通风</strong><br>
+  5. 5V/3A USB 充电头必须使用<strong>通过 3C 认证</strong>的正规品牌产品,禁止使用劣质电源<br>
+  6. 长期无人值守时,应<strong>断开总电源</strong>(SW1 置于 OFF,并拔下 USB 充电头)
+</div>
+
+<!-- 页脚 -->
+<div style="margin-top:40px;border-top:2px solid #000;padding-top:10px;font-size:11px;display:flex;justify-content:space-between;">
+  <span>食品腐败风险预测系统 — 电气接线图文档</span>
+  <span>FSM-EWD-001 V1.1 | 2026-07-14 | 改版:5V/3A充电头直供+单风扇</span>
+</div>
+
+</div>
+</body>
+</html>

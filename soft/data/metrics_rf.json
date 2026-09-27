@@ -1,0 +1,54 @@
+{
+  "results": [
+    {
+      "name": "RandomForest",
+      "accuracy": 0.9882,
+      "macro_f1": 0.9872,
+      "confusion_matrix": [
+        [
+          236,
+          1,
+          0
+        ],
+        [
+          3,
+          102,
+          0
+        ],
+        [
+          0,
+          1,
+          81
+        ]
+      ]
+    },
+    {
+      "name": "GradientBoosting",
+      "accuracy": 0.9976,
+      "macro_f1": 0.9964,
+      "confusion_matrix": [
+        [
+          237,
+          0,
+          0
+        ],
+        [
+          0,
+          105,
+          0
+        ],
+        [
+          0,
+          1,
+          81
+        ]
+      ]
+    }
+  ],
+  "best": "GradientBoosting",
+  "stages": [
+    "Fresh",
+    "Warning",
+    "Danger"
+  ]
+}

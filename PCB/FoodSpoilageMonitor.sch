@@ -1,0 +1,193 @@
+EESchema Schematic File Version 4
+LIBS:power;Device;Connector_Generic;Switch;Motor;FoodSpoilageMonitor
+EELAYER 26 0
+EELAYER END
+$Descr A3 16535 11693
+encoding utf-8
+Sheet 1 1
+Title "食品腐败风险预测系统"
+Date "2026-08-07"
+Rev "1.0"
+Comp "FSM Project"
+Comment1 "ESP32 + BME680 + SGP30 + MQ-137"
+Comment2 "80mm x 60mm 双层板"
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Connector_Generic:Conn_01x02 J1
+U 1 1 1602879489
+P 1500 2000
+F 0 "J1" H 1500 1950 50  0001 L CNN
+F 1 "5V/3A" H 1500 2050 50  0001 L CNN
+F 2 "TerminalBlock:TerminalBlock_bornier-2_P5.08mm" H 1500 2000 50  0001 C CNN
+F 3 "" H 1500 2000 50  0001 C CNN
+	1   1500 2000
+	0   0   0   0
+$EndComp
+$Comp
+L Switch:SW_SPDT SW1
+U 1 1 1602879490
+P 2500 2000
+F 0 "SW1" H 2500 1950 50  0001 L CNN
+F 1 "SS-12F15" H 2500 2050 50  0001 L CNN
+F 2 "Button_Switch_THT:SW_CuK_OS102011MA1QN1_SPDT_Angled" H 2500 2000 50  0001 C CNN
+F 3 "" H 2500 2000 50  0001 C CNN
+	1   2500 2000
+	180   0   0   0
+$EndComp
+$Comp
+L Device:Polyfuse F1
+U 1 1 1602879491
+P 3500 2000
+F 0 "F1" H 3500 1950 50  0001 L CNN
+F 1 "1.1A" H 3500 2050 50  0001 L CNN
+F 2 "Fuse:Fuse_BelFuse_0ZCF0005FF_C6.3x5.1" H 3500 2000 50  0001 C CNN
+F 3 "" H 3500 2000 50  0001 C CNN
+	1   3500 2000
+	0   0   0   0
+$EndComp
+$Comp
+L Device:CP C1
+U 1 1 1602879492
+P 4500 2000
+F 0 "C1" H 4500 1950 50  0001 L CNN
+F 1 "10uF" H 4500 2050 50  0001 L CNN
+F 2 "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm" H 4500 2000 50  0001 C CNN
+F 3 "" H 4500 2000 50  0001 C CNN
+	1   4500 2000
+	0   0   0   0
+$EndComp
+$Comp
+L ESP32:ESP32-WROOM-32 U1
+U 1 1 1602879493
+P 4000 4000
+F 0 "U1" H 4000 3950 50  0001 L CNN
+F 1 "" H 4000 4050 50  0001 L CNN
+F 2 "Module:NodeMCU-32S" H 4000 4000 50  0001 C CNN
+F 3 "" H 4000 4000 50  0001 C CNN
+	1   4000 4000
+	0   0   0   0
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x04 U2
+U 1 1 1602879494
+P 6500 2000
+F 0 "U2" H 6500 1950 50  0001 L CNN
+F 1 "" H 6500 2050 50  0001 L CNN
+F 2 "PinHeader:PinHeader_1x04_P2.54mm_Vertical" H 6500 2000 50  0001 C CNN
+F 3 "" H 6500 2000 50  0001 C CNN
+	1   6500 2000
+	0   0   0   0
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x04 U3
+U 1 1 1602879495
+P 6500 3100
+F 0 "U3" H 6500 3050 50  0001 L CNN
+F 1 "" H 6500 3150 50  0001 L CNN
+F 2 "PinHeader:PinHeader_1x04_P2.54mm_Vertical" H 6500 3100 50  0001 C CNN
+F 3 "" H 6500 3100 50  0001 C CNN
+	1   6500 3100
+	0   0   0   0
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x03 U4
+U 1 1 1602879496
+P 6500 4500
+F 0 "U4" H 6500 4450 50  0001 L CNN
+F 1 "NH3" H 6500 4550 50  0001 L CNN
+F 2 "PinHeader:PinHeader_1x03_P2.54mm_Vertical" H 6500 4500 50  0001 C CNN
+F 3 "" H 6500 4500 50  0001 C CNN
+	1   6500 4500
+	0   0   0   0
+$EndComp
+$Comp
+L Device:C C2
+U 1 1 1602879497
+P 5600 4500
+F 0 "C2" H 5600 4450 50  0001 L CNN
+F 1 "100nF" H 5600 4550 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 5600 4500 50  0001 C CNN
+F 3 "" H 5600 4500 50  0001 C CNN
+	1   5600 4500
+	0   0   0   0
+$EndComp
+$Comp
+L Switch:SW_SPDT SW2
+U 1 1 1602879498
+P 2500 5200
+F 0 "SW2" H 2500 5150 50  0001 L CNN
+F 1 "SS-12F15" H 2500 5250 50  0001 L CNN
+F 2 "Button_Switch_THT:SW_CuK_OS102011MA1QN1_SPDT_Angled" H 2500 5200 50  0001 C CNN
+F 3 "" H 2500 5200 50  0001 C CNN
+	1   2500 5200
+	0   0   0   0
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x02 M1
+U 1 1 1602879499
+P 3500 5500
+F 0 "M1" H 3500 5450 50  0001 L CNN
+F 1 "5V" H 3500 5550 50  0001 L CNN
+F 2 "PinHeader:PinHeader_1x02_P2.54mm_Vertical" H 3500 5500 50  0001 C CNN
+F 3 "" H 3500 5500 50  0001 C CNN
+	1   3500 5500
+	0   0   0   0
+$EndComp
+$Comp
+L Device:LED D1
+U 1 1 1602879500
+P 1500 3700
+F 0 "D1" H 1500 3650 50  0001 L CNN
+F 1 "Red" H 1500 3750 50  0001 L CNN
+F 2 "LED_THT:LED_D5.0mm" H 1500 3700 50  0001 C CNN
+F 3 "" H 1500 3700 50  0001 C CNN
+	1   1500 3700
+	180   0   0   0
+$EndComp
+$Comp
+L Device:R R1
+U 1 1 1602879501
+P 1500 3000
+F 0 "R1" H 1500 2950 50  0001 L CNN
+F 1 "150R" H 1500 3050 50  0001 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" H 1500 3000 50  0001 C CNN
+F 3 "" H 1500 3000 50  0001 C CNN
+	1   1500 3000
+	90   0   0   0
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x04 TB1
+U 1 1 1602879502
+P 1500 6500
+F 0 "TB1" H 1500 6450 50  0001 L CNN
+F 1 "4P" H 1500 6550 50  0001 L CNN
+F 2 "TerminalBlock:TerminalBlock_bornier-4_P5.08mm" H 1500 6500 50  0001 C CNN
+F 3 "" H 1500 6500 50  0001 C CNN
+	1   1500 6500
+	0   0   0   0
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x08 TB2
+U 1 1 1602879503
+P 3500 6500
+F 0 "TB2" H 3500 6450 50  0001 L CNN
+F 1 "8P" H 3500 6550 50  0001 L CNN
+F 2 "TerminalBlock:TerminalBlock_bornier-8_P5.08mm" H 3500 6500 50  0001 C CNN
+F 3 "" H 3500 6500 50  0001 C CNN
+	1   3500 6500
+	0   0   0   0
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x02 TB3
+U 1 1 1602879504
+P 5500 6500
+F 0 "TB3" H 5500 6450 50  0001 L CNN
+F 1 "2P" H 5500 6550 50  0001 L CNN
+F 2 "TerminalBlock:TerminalBlock_bornier-2_P5.08mm" H 5500 6500 50  0001 C CNN
+F 3 "" H 5500 6500 50  0001 C CNN
+	1   5500 6500
+	0   0   0   0
+$EndComp
+$EndSCHEMATC

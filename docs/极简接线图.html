@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>极简接线图 - 食品腐败预测系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", sans-serif; background: #f5f5f5; padding: 20px; }
+  .page { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; }
+  h1 { text-align: center; color: #333; font-size: 22px; margin-bottom: 5px; }
+  .subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 30px; }
+
+  /* 颜色图例 - 顶部醒目位置 */
+  .legend-bar {
+    display: flex; gap: 15px; justify-content: center;
+    background: #f0f4ff; padding: 12px; border-radius: 6px; margin-bottom: 25px;
+    flex-wrap: wrap;
+  }
+  .legend-bar .item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .legend-bar .swatch { width: 28px; height: 6px; border-radius: 3px; }
+
+  /* SVG容器 */
+  .diagram { text-align: center; margin-bottom: 30px; }
+  .diagram svg { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 6px; }
+
+  /* 简明接线说明卡 */
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 25px; }
+  .card {
+    border: 2px solid; border-radius: 8px; padding: 15px; background: #fafafa;
+  }
+  .card h3 { font-size: 15px; margin-bottom: 10px; }
+  .card .pin-list { list-style: none; font-size: 13px; line-height: 2; }
+  .card .pin-list li { padding-left: 12px; border-left: 4px solid; margin-bottom: 4px; }
+  .card.red { border-color: #d32f2f; }
+  .card.red h3 { color: #d32f2f; }
+  .card.red .pin-list li { border-color: #d32f2f; }
+  .card.blue { border-color: #1565c0; }
+  .card.blue h3 { color: #1565c0; }
+  .card.blue .pin-list li { border-color: #1565c0; }
+  .card.orange { border-color: #ef6c00; }
+  .card.orange h3 { color: #ef6c00; }
+  .card.orange .pin-list li { border-color: #ef6c00; }
+  .card.green { border-color: #2e7d32; }
+  .card.green h3 { color: #2e7d32; }
+  .card.green .pin-list li { border-color: #2e7d32; }
+  .card.teal { border-color: #00695c; }
+  .card.teal h3 { color: #00695c; }
+  .card.teal .pin-list li { border-color: #00695c; }
+
+  /* 接线步骤 */
+  .steps { background: #fffde7; border-left: 4px solid #f9a825; padding: 15px 20px; margin-top: 25px; border-radius: 4px; }
+  .steps h3 { color: #f57c00; margin-bottom: 10px; }
+  .steps ol { padding-left: 20px; line-height: 2; font-size: 13px; }
+
+  /* 提示 */
+  .tip { background: #e8f5e9; border-left: 4px solid #2e7d32; padding: 12px 15px; margin-top: 15px; font-size: 13px; border-radius: 4px; }
+  .warn { background: #fce4ec; border-left: 4px solid #c62828; padding: 12px 15px; margin-top: 15px; font-size: 13px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>食品腐败预测系统 · 极简接线图</h1>
+<p class="subtitle">看这一张图就够了 · 每根线都标了颜色和接到哪里</p>
+
+<!-- 顶部颜色图例 -->
+<div class="legend-bar">
+  <div class="item"><span class="swatch" style="background:#d32f2f"></span>红色 = 5V 电源</div>
+  <div class="item"><span class="swatch" style="background:#ef6c00"></span>橙色 = 3.3V 电源</div>
+  <div class="item"><span class="swatch" style="background:#212121"></span>黑色 = GND 地线</div>
+  <div class="item"><span class="swatch" style="background:#1565c0"></span>蓝色 = SDA 数据</div>
+  <div class="item"><span class="swatch" style="background:#f9a825"></span>黄色 = SCL 时钟</div>
+  <div class="item"><span class="swatch" style="background:#2e7d32"></span>绿色 = 模拟信号</div>
+</div>
+
+<!-- ===== 极简主接线图 ===== -->
+<div class="diagram">
+<svg viewBox="0 0 1100 620" xmlns="http://www.w3.org/2000/svg" style="background:#fff;">
+
+  <!-- ===== 左侧:5V充电头 ===== -->
+  <g transform="translate(30,200)">
+    <!-- USB充电头形状 -->
+    <rect x="0" y="0" width="100" height="140" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="2.5"/>
+    <text x="50" y="28" text-anchor="middle" font-size="12" font-weight="bold" fill="#1565c0">5V/3A</text>
+    <text x="50" y="48" text-anchor="middle" font-size="11" font-weight="bold" fill="#1565c0">USB充电头</text>
+    <!-- USB插头图标 -->
+    <rect x="35" y="65" width="30" height="20" rx="2" fill="#fff" stroke="#1565c0" stroke-width="1.5"/>
+    <rect x="40" y="70" width="20" height="10" fill="#1565c0"/>
+    <text x="50" y="105" text-anchor="middle" font-size="9" fill="#666">输出: 5V</text>
+    <text x="50" y="120" text-anchor="middle" font-size="9" fill="#666">电流: 3A</text>
+    <!-- 输出线 -->
+    <line x1="100" y1="60" x2="160" y2="60" stroke="#d32f2f" stroke-width="4"/>
+    <text x="105" y="55" font-size="9" fill="#d32f2f" font-weight="bold">红 +5V</text>
+    <line x1="100" y1="90" x2="160" y2="90" stroke="#212121" stroke-width="4"/>
+    <text x="105" y="103" font-size="9" fill="#212121" font-weight="bold">黑 GND</text>
+  </g>
+
+  <!-- SW1总开关 -->
+  <g transform="translate(160,240)">
+    <rect x="0" y="0" width="70" height="50" rx="4" fill="#fff3e0" stroke="#ef6c00" stroke-width="2"/>
+    <text x="35" y="20" text-anchor="middle" font-size="10" font-weight="bold">SW1</text>
+    <text x="35" y="35" text-anchor="middle" font-size="9">总开关</text>
+    <text x="35" y="46" text-anchor="middle" font-size="7" fill="#666">ON/OFF</text>
+  </g>
+  <!-- 充电头 → SW1 → ESP32 -->
+  <line x1="230" y1="270" x2="290" y2="270" stroke="#d32f2f" stroke-width="4"/>
+  <line x1="190" y1="290" x2="190" y2="320" stroke="#212121" stroke-width="3"/>
+  <line x1="190" y1="320" x2="290" y2="320" stroke="#212121" stroke-width="3"/>
+
+  <!-- ===== 中央:ESP32主控板 ===== -->
+  <g transform="translate(290,150)">
+    <!-- ESP32板子形状 -->
+    <rect x="0" y="0" width="240" height="280" rx="6" fill="#fff" stroke="#283593" stroke-width="3"/>
+    <rect x="0" y="0" width="240" height="35" rx="6" fill="#283593"/>
+    <text x="120" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">ESP32 主控板</text>
+
+    <!-- USB口(底部) -->
+    <rect x="105" y="280" width="30" height="12" fill="#bbb" stroke="#666"/>
+    <text x="120" y="305" text-anchor="middle" font-size="8" fill="#666">USB-C (烧录程序用)</text>
+
+    <!-- 引脚排列(左侧) -->
+    <!-- 3V3 -->
+    <rect x="0" y="55" width="14" height="14" fill="#ef6c00" stroke="#666"/>
+    <text x="20" y="65" font-size="10" font-weight="bold" fill="#ef6c00">3V3 → 给传感器供电</text>
+    <!-- GND -->
+    <rect x="0" y="80" width="14" height="14" fill="#212121" stroke="#666"/>
+    <text x="20" y="90" font-size="10" font-weight="bold" fill="#212121">GND → 公共地</text>
+    <!-- GPIO21 SDA -->
+    <rect x="0" y="105" width="14" height="14" fill="#1565c0" stroke="#666"/>
+    <text x="20" y="115" font-size="10" font-weight="bold" fill="#1565c0">GPIO21 → SDA 数据线</text>
+    <!-- GPIO22 SCL -->
+    <rect x="0" y="130" width="14" height="14" fill="#f9a825" stroke="#666"/>
+    <text x="20" y="140" font-size="10" font-weight="bold" fill="#f9a825">GPIO22 → SCL 时钟线</text>
+    <!-- GPIO34 ADC -->
+    <rect x="0" y="155" width="14" height="14" fill="#2e7d32" stroke="#666"/>
+    <text x="20" y="165" font-size="10" font-weight="bold" fill="#2e7d32">GPIO34 ← 氨气模拟信号</text>
+    <!-- VIN -->
+    <rect x="0" y="180" width="14" height="14" fill="#d32f2f" stroke="#666"/>
+    <text x="20" y="190" font-size="10" font-weight="bold" fill="#d32f2f">VIN ← 5V 主电源</text>
+
+    <!-- ESP32板载说明 -->
+    <text x="120" y="220" text-anchor="middle" font-size="9" fill="#666">板载 Wi-Fi + 蓝牙</text>
+    <text x="120" y="235" text-anchor="middle" font-size="9" fill="#666">数据通过Wi-Fi发到电脑</text>
+    <text x="120" y="252" text-anchor="middle" font-size="9" fill="#7b1fa2" font-weight="bold">📱 无线传输 → MQTT</text>
+  </g>
+
+  <!-- ===== 右上:BME680 ===== -->
+  <g transform="translate(640,50)">
+    <rect x="0" y="0" width="180" height="120" rx="6" fill="#e1f5fe" stroke="#0277bd" stroke-width="2.5"/>
+    <text x="90" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#0277bd">BME680</text>
+    <text x="90" y="38" text-anchor="middle" font-size="10" fill="#666">温湿度+气压+VOC</text>
+    <!-- 4个引脚 -->
+    <rect x="10" y="65" width="35" height="14" fill="#ef6c00" stroke="#666"/>
+    <text x="50" y="76" font-size="9" font-weight="bold" fill="#ef6c00">VCC</text>
+    <rect x="10" y="83" width="35" height="14" fill="#212121" stroke="#666"/>
+    <text x="50" y="94" font-size="9" font-weight="bold" fill="#212121">GND</text>
+    <rect x="10" y="101" width="35" height="14" fill="#1565c0" stroke="#666"/>
+    <text x="50" y="112" font-size="9" font-weight="bold" fill="#1565c0">SDA</text>
+    <rect x="135" y="65" width="35" height="14" fill="#f9a825" stroke="#666"/>
+    <text x="125" y="76" text-anchor="end" font-size="9" font-weight="bold" fill="#f9a825">SCL</text>
+    <text x="90" y="135" text-anchor="middle" font-size="9" fill="#999">I²C地址: 0x76</text>
+  </g>
+
+  <!-- ===== 右中:SGP30 ===== -->
+  <g transform="translate(640,210)">
+    <rect x="0" y="0" width="180" height="120" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5"/>
+    <text x="90" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#2e7d32">SGP30</text>
+    <text x="90" y="38" text-anchor="middle" font-size="10" fill="#666">TVOC + eCO₂</text>
+    <rect x="10" y="65" width="35" height="14" fill="#ef6c00" stroke="#666"/>
+    <text x="50" y="76" font-size="9" font-weight="bold" fill="#ef6c00">VCC</text>
+    <rect x="10" y="83" width="35" height="14" fill="#212121" stroke="#666"/>
+    <text x="50" y="94" font-size="9" font-weight="bold" fill="#212121">GND</text>
+    <rect x="10" y="101" width="35" height="14" fill="#1565c0" stroke="#666"/>
+    <text x="50" y="112" font-size="9" font-weight="bold" fill="#1565c0">SDA</text>
+    <rect x="135" y="65" width="35" height="14" fill="#f9a825" stroke="#666"/>
+    <text x="125" y="76" text-anchor="end" font-size="9" font-weight="bold" fill="#f9a825">SCL</text>
+    <text x="90" y="135" text-anchor="middle" font-size="9" fill="#999">I²C地址: 0x58</text>
+  </g>
+
+  <!-- ===== 右下:MQ-137 ===== -->
+  <g transform="translate(640,370)">
+    <rect x="0" y="0" width="180" height="120" rx="6" fill="#fff8e1" stroke="#ef6c00" stroke-width="2.5"/>
+    <text x="90" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#ef6c00">MQ-137</text>
+    <text x="90" y="38" text-anchor="middle" font-size="10" fill="#666">氨气传感器</text>
+    <rect x="10" y="65" width="35" height="14" fill="#d32f2f" stroke="#666"/>
+    <text x="50" y="76" font-size="9" font-weight="bold" fill="#d32f2f">VCC(5V)</text>
+    <rect x="10" y="83" width="35" height="14" fill="#212121" stroke="#666"/>
+    <text x="50" y="94" font-size="9" font-weight="bold" fill="#212121">GND</text>
+    <rect x="10" y="101" width="35" height="14" fill="#2e7d32" stroke="#666"/>
+    <text x="50" y="112" font-size="9" font-weight="bold" fill="#2e7d32">AO(模拟)</text>
+    <text x="90" y="135" text-anchor="middle" font-size="9" fill="#c62828" font-weight="bold">⚠ 必须接5V,不能接3.3V</text>
+  </g>
+
+  <!-- ===== 最右:风扇 M1 ===== -->
+  <g transform="translate(900,440)">
+    <circle cx="60" cy="60" r="55" fill="#e0f2f1" stroke="#00695c" stroke-width="3"/>
+    <!-- 风扇叶片 -->
+    <path d="M60,60 Q60,15 80,30 Q70,50 60,60 Z" fill="#00695c" opacity="0.4"/>
+    <path d="M60,60 Q105,60 90,80 Q70,70 60,60 Z" fill="#00695c" opacity="0.4"/>
+    <path d="M60,60 Q60,105 40,90 Q50,70 60,60 Z" fill="#00695c" opacity="0.4"/>
+    <path d="M60,60 Q15,60 30,40 Q50,50 60,60 Z" fill="#00695c" opacity="0.4"/>
+    <circle cx="60" cy="60" r="8" fill="#00695c"/>
+    <text x="60" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#00695c">M1 风扇</text>
+    <text x="60" y="130" text-anchor="middle" font-size="9" fill="#666">5V / 150mA</text>
+    <!-- 引脚 -->
+    <rect x="-5" y="50" width="20" height="10" fill="#d32f2f" stroke="#666"/>
+    <text x="-10" y="58" text-anchor="end" font-size="9" font-weight="bold" fill="#d32f2f">+</text>
+    <rect x="105" y="50" width="20" height="10" fill="#212121" stroke="#666"/>
+    <text x="130" y="58" font-size="9" font-weight="bold" fill="#212121">-</text>
+  </g>
+
+  <!-- ===== SW2 风扇开关 ===== -->
+  <g transform="translate(870,360)">
+    <rect x="0" y="0" width="60" height="40" rx="4" fill="#fff3e0" stroke="#ef6c00" stroke-width="2"/>
+    <text x="30" y="17" text-anchor="middle" font-size="9" font-weight="bold">SW2</text>
+    <text x="30" y="30" text-anchor="middle" font-size="8">风扇开关</text>
+  </g>
+
+  <!-- ============ 所有连线 ============ -->
+
+  <!-- 3.3V线 (橙) ESP32→BME680→SGP30 -->
+  <path d="M530,205 L610,205 L610,115 L640,115" stroke="#ef6c00" stroke-width="2.5" fill="none"/>
+  <line x1="610" y1="115" x2="610" y2="275" stroke="#ef6c00" stroke-width="2.5"/>
+  <line x1="610" y1="275" x2="640" y2="275" stroke="#ef6c00" stroke-width="2.5"/>
+  <circle cx="610" cy="115" r="3" fill="#ef6c00"/>
+  <text x="565" y="200" font-size="9" fill="#ef6c00" font-weight="bold">橙 3.3V</text>
+
+  <!-- GND线 (黑) ESP32→所有 -->
+  <path d="M530,230 L595,230 L595,135 L640,135" stroke="#212121" stroke-width="2.5" fill="none"/>
+  <line x1="595" y1="135" x2="595" y2="295" stroke="#212121" stroke-width="2.5"/>
+  <line x1="595" y1="295" x2="640" y2="295" stroke="#212121" stroke-width="2.5"/>
+  <line x1="595" y1="295" x2="595" y2="455" stroke="#212121" stroke-width="2.5"/>
+  <line x1="595" y1="455" x2="640" y2="455" stroke="#212121" stroke-width="2.5"/>
+  <circle cx="595" cy="135" r="3" fill="#212121"/>
+  <circle cx="595" cy="295" r="3" fill="#212121"/>
+  <text x="555" y="225" font-size="9" fill="#212121" font-weight="bold">黑 GND</text>
+
+  <!-- SDA线 (蓝) ESP32→BME680→SGP30 -->
+  <path d="M530,255 L580,255 L580,90 L640,90" stroke="#1565c0" stroke-width="2.5" fill="none"/>
+  <line x1="580" y1="90" x2="580" y2="250" stroke="#1565c0" stroke-width="2.5"/>
+  <line x1="580" y1="250" x2="640" y2="250" stroke="#1565c0" stroke-width="2.5"/>
+  <circle cx="580" cy="90" r="3" fill="#1565c0"/>
+  <text x="555" y="250" font-size="9" fill="#1565c0" font-weight="bold">蓝 SDA</text>
+
+  <!-- SCL线 (黄) ESP32→BME680→SGP30 -->
+  <path d="M530,280 L565,280 L565,65 L640,65" stroke="#f9a825" stroke-width="2.5" fill="none"/>
+  <line x1="565" y1="65" x2="565" y2="225" stroke="#f9a825" stroke-width="2.5"/>
+  <line x1="565" y1="225" x2="640" y2="225" stroke="#f9a825" stroke-width="2.5"/>
+  <circle cx="565" cy="65" r="3" fill="#f9a825"/>
+  <text x="555" y="275" font-size="9" fill="#f9a825" font-weight="bold">黄 SCL</text>
+
+  <!-- ADC线 (绿) ESP32←MQ-137 -->
+  <path d="M530,305 L555,305 L555,430 L640,430" stroke="#2e7d32" stroke-width="2.5" fill="none"/>
+  <text x="565" y="370" font-size="9" fill="#2e7d32" font-weight="bold">绿 ADC</text>
+  <text x="565" y="382" font-size="8" fill="#2e7d32">(模拟信号)</text>
+
+  <!-- 5V线 (红) SW1→ESP32 VIN / MQ-137 / SW2→风扇 -->
+  <!-- ESP32 VIN -->
+  <path d="M290,270 L290,330 L530,330" stroke="#d32f2f" stroke-width="3" fill="none"/>
+  <text x="380" y="325" font-size="10" fill="#d32f2f" font-weight="bold">红 5V → ESP32 VIN</text>
+
+  <!-- 5V → MQ-137 -->
+  <path d="M290,330 L290,470 L640,470" stroke="#d32f2f" stroke-width="3" fill="none"/>
+  <circle cx="290" cy="470" r="3" fill="#d32f2f"/>
+  <text x="400" y="465" font-size="10" fill="#d32f2f" font-weight="bold">红 5V → MQ-137 VCC</text>
+
+  <!-- 5V → SW2 → M1风扇 -->
+  <path d="M290,470 L290,520 L870,520 L870,400" stroke="#d32f2f" stroke-width="3" fill="none"/>
+  <circle cx="290" cy="520" r="3" fill="#d32f2f"/>
+  <text x="530" y="515" font-size="10" fill="#d32f2f" font-weight="bold">红 5V → SW2 → 风扇 M1</text>
+  <!-- SW2 → 风扇+极 -->
+  <line x1="930" y1="380" x2="930" y2="490" stroke="#d32f2f" stroke-width="3"/>
+  <line x1="930" y1="490" x2="895" y2="490" stroke="#d32f2f" stroke-width="3"/>
+
+  <!-- 风扇 GND -->
+  <path d="M1025,490 L1045,490 L1045,560 L180,560 L180,320" stroke="#212121" stroke-width="2.5" fill="none"/>
+  <circle cx="180" cy="320" r="3" fill="#212121"/>
+  <text x="600" y="555" font-size="10" fill="#212121" font-weight="bold">黑 GND ← 风扇 M1</text>
+
+  <!-- 充电头说明标注 -->
+  <text x="80" y="380" text-anchor="middle" font-size="10" fill="#1565c0" font-weight="bold">⬇ 5V/3A 充电头</text>
+  <text x="80" y="395" text-anchor="middle" font-size="9" fill="#666">手机快充充电头即可</text>
+
+</svg>
+</div>
+
+<!-- ===== 每个元件的接线卡片 ===== -->
+<h2 style="margin-top:30px;border-left:4px solid #1a73e8;padding-left:10px;">每个元件接几根线?一看就懂</h2>
+
+<div class="cards">
+
+  <!-- BME680 -->
+  <div class="card blue">
+    <h3>BME680 (温湿度+气压+VOC)</h3>
+    <ul class="pin-list">
+      <li><strong style="color:#ef6c00">VCC</strong> ← 橙色线 ← ESP32 的 <strong>3V3</strong> 引脚</li>
+      <li><strong style="color:#212121">GND</strong> ← 黑色线 ← ESP32 的 <strong>GND</strong> 引脚</li>
+      <li><strong style="color:#1565c0">SDA</strong> ← 蓝色线 ← ESP32 的 <strong>GPIO21</strong></li>
+      <li><strong style="color:#f9a825">SCL</strong> ← 黄色线 ← ESP32 的 <strong>GPIO22</strong></li>
+    </ul>
+  </div>
+
+  <!-- SGP30 -->
+  <div class="card green">
+    <h3>SGP30 (TVOC + eCO₂)</h3>
+    <ul class="pin-list">
+      <li><strong style="color:#ef6c00">VCC</strong> ← 橙色线 ← ESP32 的 <strong>3V3</strong> 引脚</li>
+      <li><strong style="color:#212121">GND</strong> ← 黑色线 ← ESP32 的 <strong>GND</strong> 引脚</li>
+      <li><strong style="color:#1565c0">SDA</strong> ← 蓝色线 ← ESP32 的 <strong>GPIO21</strong></li>
+      <li><strong style="color:#f9a825">SCL</strong> ← 黄色线 ← ESP32 的 <strong>GPIO22</strong></li>
+    </ul>
+    <div class="tip" style="margin-top:8px;font-size:12px;">SDA/SCL 与 BME680 共用同一组线(并联)</div>
+  </div>
+
+  <!-- MQ-137 -->
+  <div class="card orange">
+    <h3>MQ-137 (氨气传感器)</h3>
+    <ul class="pin-list">
+      <li><strong style="color:#d32f2f">VCC</strong> ← 红色线 ← <strong>5V</strong> 母线(注意是5V,不是3.3V!)</li>
+      <li><strong style="color:#212121">GND</strong> ← 黑色线 ← ESP32 的 <strong>GND</strong> 引脚</li>
+      <li><strong style="color:#2e7d32">AO</strong> → 绿色线 → ESP32 的 <strong>GPIO34</strong></li>
+    </ul>
+    <div class="warn" style="margin-top:8px;font-size:12px;">⚠ VCC 必须接 5V!接 3.3V 加热器不工作</div>
+  </div>
+
+  <!-- 风扇 M1 -->
+  <div class="card teal">
+    <h3>风扇 M1 (5V 小风扇)</h3>
+    <ul class="pin-list">
+      <li><strong style="color:#d32f2f">+红线</strong> ← 红色线 ← SW2 风扇开关 ← <strong>5V</strong> 母线</li>
+      <li><strong style="color:#212121">-黑线</strong> ← 黑色线 ← ESP32 的 <strong>GND</strong> 引脚</li>
+    </ul>
+    <div class="tip" style="margin-top:8px;font-size:12px;">风扇红线接 SW2 中间脚,SW2 另一脚接 5V</div>
+  </div>
+
+  <!-- ESP32 -->
+  <div class="card red">
+    <h3>ESP32 主控板(核心)</h3>
+    <ul class="pin-list">
+      <li><strong style="color:#d32f2f">VIN</strong> ← 红色线 ← <strong>5V</strong> 母线(主供电)</li>
+      <li><strong style="color:#ef6c00">3V3</strong> → 橙色线 → BME680 + SGP30 的 VCC</li>
+      <li><strong style="color:#212121">GND</strong> → 黑色线 → 所有模块的 GND(共地)</li>
+      <li><strong style="color:#1565c0">GPIO21</strong> → 蓝色线 → BME680 + SGP30 的 SDA</li>
+      <li><strong style="color:#f9a825">GPIO22</strong> → 黄色线 → BME680 + SGP30 的 SCL</li>
+      <li><strong style="color:#2e7d32">GPIO34</strong> ← 绿色线 ← MQ-137 的 AO</li>
+    </ul>
+  </div>
+
+  <!-- 5V充电头 -->
+  <div class="card red" style="border-color:#1565c0;">
+    <h3 style="color:#1565c0;">5V/3A USB 充电头(电源)</h3>
+    <ul class="pin-list" style="border-color:#1565c0;">
+      <li><strong style="color:#d32f2f">红线(+)</strong> → SW1 总开关 → 5V 母线</li>
+      <li><strong style="color:#212121">黑线(-)</strong> → GND 母线(公共地)</li>
+    </ul>
+    <div class="tip" style="margin-top:8px;font-size:12px;">用手机快充充电头即可,5V/3A 输出</div>
+  </div>
+
+</div>
+
+<!-- ===== 接线步骤 ===== -->
+<div class="steps">
+  <h3>📋 接线步骤(按顺序做,不会乱)</h3>
+  <ol>
+    <li><strong>断电</strong>:USB 充电头先不要插插座,SW1/SW2 都拨到 OFF</li>
+    <li><strong>接 ESP32 的电源</strong>:5V 充电头红线 → SW1 → ESP32 的 VIN;黑线 → ESP32 的 GND</li>
+    <li><strong>接 BME680</strong>:4 根线 — VCC(橙→3V3)、GND(黑→GND)、SDA(蓝→GPIO21)、SCL(黄→GPIO22)</li>
+    <li><strong>接 SGP30</strong>:4 根线 — 同 BME680,SDA/SCL 并联到同一组线上</li>
+    <li><strong>接 MQ-137</strong>:3 根线 — VCC(红→5V母线,不是3V3!)、GND(黑)、AO(绿→GPIO34)</li>
+    <li><strong>接风扇 M1</strong>:2 根线 — 红线 → SW2 → 5V母线;黑线 → GND</li>
+    <li><strong>检查</strong>:用万用表测 5V 和 GND 之间,电阻应 &gt;1kΩ(不能短路)</li>
+    <li><strong>通电测试</strong>:插上充电头,SW1 拨到 ON,看到 ESP32 板载红灯亮起 = 成功!</li>
+  </ol>
+</div>
+
+<div class="tip">
+  <strong>💡 小贴士:</strong>
+  <ul style="margin-top:5px;padding-left:20px;line-height:1.8;">
+    <li>所有 GND(地线)必须接在一起,叫"共地",这是电路工作的基础</li>
+    <li>SDA/SCL 是 I²C 总线,多个传感器可以并联到同一对线上(本项目 BME680 + SGP30 共用)</li>
+    <li>MQ-137 上电后会发热(正常现象),需要预热 1 分钟数据才稳定</li>
+    <li>ESP32 烧录程序时,单独用 USB-C 线接电脑,不要接 5V 充电头(避免双供电)</li>
+  </ul>
+</div>
+
+<div class="warn">
+  <strong>⚠ 重要提醒:</strong>
+  <ul style="margin-top:5px;padding-left:20px;line-height:1.8;">
+    <li>MQ-137 的 VCC 必须接 <strong style="color:#d32f2f">5V</strong>,绝对不能接 3.3V(否则加热器不工作)</li>
+    <li>BME680 和 SGP30 的 VCC 必须接 <strong style="color:#ef6c00">3.3V</strong>,不能接 5V(会烧坏)</li>
+    <li>接线时一定要断电!确认所有线接对后再通电</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

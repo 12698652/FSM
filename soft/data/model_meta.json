@@ -1,0 +1,38 @@
+{
+  "model": "LSTM+Attention",
+  "window": 60,
+  "n_features": 8,
+  "feature_names": [
+    "voc",
+    "co2eq",
+    "tvoc",
+    "temperature",
+    "humidity",
+    "nh3_adc",
+    "d_nh3",
+    "d_voc"
+  ],
+  "stage_names": [
+    "Fresh",
+    "Warning",
+    "Danger"
+  ],
+  "norm_lo": [
+    136.0,
+    395.0,
+    160.0,
+    24.100000381469727,
+    61.20000076293945,
+    500.0
+  ],
+  "norm_hi": [
+    1008.0,
+    2223.0,
+    1691.0,
+    25.899999618530273,
+    68.5999984741211,
+    1913.0
+  ],
+  "label_source": "pseudo(NH3阈值, 仅演示)",
+  "exported_at": "2026-09-24 01:21:42"
+}
