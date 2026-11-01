@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>样品台账 - 食品腐败检测</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #f0f4f8; color: #2d3748; padding: 16px;
+    max-width: 860px; margin: 0 auto; font-size: 14px;
+  }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  h1 { font-size: 19px; }
+  h2 { font-size: 15px; margin-bottom: 10px; color: #2d3748; }
+  a.back { font-size: 13px; color: #3182ce; text-decoration: none; font-weight: 600; }
+  .box { background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .box.running { border-left: 4px solid #38a169; }
+  .box.empty { color: #718096; text-align: center; padding: 22px; }
+  .code { font-family: Consolas, monospace; font-size: 17px; font-weight: 700; color: #2b6cb0; }
+  .meta { color: #718096; font-size: 13px; line-height: 1.9; margin-top: 6px; }
+  .meta b { color: #2d3748; font-weight: 600; }
+  .warn { color: #c05621; font-weight: 600; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .badge.running { background: #c6f6d5; color: #22543d; }
+  .badge.done { background: #e2e8f0; color: #4a5568; }
+  .badge.aborted { background: #fed7d7; color: #742a2a; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row > * { flex: 1 1 160px; }
+  label { display: block; font-size: 12px; color: #4a5568; font-weight: 600; margin-bottom: 4px; }
+  input, select, textarea {
+    width: 100%; padding: 7px 9px; border: 1px solid #cbd5e0; border-radius: 8px;
+    font-size: 13px; font-family: inherit; background: #fff; color: #2d3748;
+  }
+  .field { margin-bottom: 10px; }
+  button {
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; border: 1px solid #cbd5e0; background: #fff; color: #4a5568;
+  }
+  button.primary { background: #3182ce; border-color: #3182ce; color: #fff; }
+  button.danger { background: #e53e3e; border-color: #e53e3e; color: #fff; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .msg { font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .msg.err { color: #c53030; font-weight: 600; }
+  .msg.ok { color: #2f855a; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { padding: 7px 6px; text-align: left; border-bottom: 1px solid #edf2f7; white-space: nowrap; }
+  th { color: #4a5568; font-weight: 700; background: #f7fafc; }
+  td.code-cell { font-family: Consolas, monospace; font-weight: 700; color: #2b6cb0; }
+  .table-wrap { overflow-x: auto; }
+  .hint { font-size: 12px; color: #718096; line-height: 1.7; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>样品台账 / 实验编排</h1>
+  <a class="back" id="backLink" href="../">← 返回看板</a>
+</header>
+
+<div id="runningBox" class="box empty">加载中…</div>
+
+<div class="box">
+  <h2>新建样品并开始采集</h2>
+  <form id="f">
+    <div class="row">
+      <div class="field">
+        <label>样品编号 *</label>
+        <input id="code" name="code" placeholder="如 PORK-A-001" value="{{ code }}" required>
+      </div>
+      <div class="field">
+        <label>品类 *</label>
+        <input id="category" name="category" list="catList" placeholder="如 猪肉" required>
+        <datalist id="catList">
+          {% for c in categories %}<option value="{{ c }}">{% endfor %}
+        </datalist>
+      </div>
+      <div class="field">
+        <label>批次号</label>
+        <input id="batch" name="batch" placeholder="如 B1 / 20261101">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>包装</label>
+        <select id="packaging" name="packaging">
+          {% for p in packagings %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>存放条件</label>
+        <select id="storage" name="storage">
+          {% for s in storages %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>计划时长(h)</label>
+        <input id="plan_hours" name="plan_hours" type="number" step="0.5" min="0.5" value="{{ default_hours }}">
+      </div>
+      <div class="field">
+        <label>采样间隔(s)</label>
+        <input id="interval_s" name="interval_s" type="number" min="5" value="{{ default_interval }}">
+      </div>
+    </div>
+    <div class="field">
+      <label>备注</label>
+      <input id="note" name="note" placeholder="如 冷藏取出回温 30min 后入舱">
+    </div>
+    <button class="primary" id="btnStart" type="submit">开始采集</button>
+    <div class="msg" id="msg"></div>
+    <div class="hint">开始后，采集桥入库的每条数据都会自动打上该样品的 sample_id；同一时间只允许一个样品在采集。</div>
+  </form>
+</div>
+
+<div class="box">
+  <h2>历史样品</h2>
+  <div class="table-wrap">
+    <table id="tbl">
+      <thead>
+        <tr><th>编号</th><th>品类</th><th>批次</th><th>存放</th><th>开始</th><th>结束</th><th>时长</th><th>状态</th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="hint" id="tblHint" style="display:none">暂无样品记录，先在上面新建一个。</div>
+</div>
+
+<script>
+  // 路径前缀自适应：本地 "/" → /api/samples；云端挂在 /gjn 下 → /gjn/api/samples
+  const BASE = location.pathname.replace(/\/(?:samples|s\/[^/]+)\/?$/, "/");
+  const API = BASE + "api/samples";
+  document.getElementById("backLink").href = BASE;
+
+  const STAGE = { running: "采集中", done: "已结束", aborted: "作废" };
+
+  function el(id) { return document.getElementById(id); }
+  function showMsg(text, ok) {
+    const m = el("msg");
+    m.textContent = text || "";
+    m.className = "msg " + (text ? (ok ? "ok" : "err") : "");
+  }
+  function fmt(n) { return n === null || n === undefined || n === "" ? "-" : n; }
+
+  function renderRunning(rows) {
+    const box = el("runningBox");
+    const cur = rows.find(r => r.status === "running");
+    if (!cur) {
+      box.className = "box empty";
+      box.innerHTML = "当前没有正在采集的样品 —— 在上方新建一个，或扫描样品贴纸上的二维码。";
+      return;
+    }
+    box.className = "box running";
+    box.innerHTML =
+      '<div class="row" style="align-items:center">' +
+        '<div><div class="code">' + cur.code + '</div>' +
+        '<div class="meta"><b>' + cur.category + '</b>　' +
+          fmt(cur.storage) + '　' + fmt(cur.packaging) + '　批次 ' + fmt(cur.batch) + '</div></div>' +
+        '<div style="flex:0 0 auto"><span class="badge running">采集中</span></div>' +
+      '</div>' +
+      '<div class="meta">开始 <b>' + cur.start_ts + '</b>　已运行 <b>' + cur.hours + ' h</b>' +
+        '　计划结束 ' + fmt(cur.plan_end_ts) +
+        (cur.overdue ? '　<span class="warn">已超计划时长</span>' : '') + '</div>' +
+      '<div style="margin-top:10px"><button class="danger" onclick="stopSample(' + cur.id + ')">结束采集</button></div>';
+  }
+
+  function renderTable(rows) {
+    const tb = el("tbl").querySelector("tbody");
+    tb.innerHTML = "";
+    el("tblHint").style.display = rows.length ? "none" : "block";
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="code-cell">' + r.code + '</td>' +
+        '<td>' + r.category + '</td>' +
+        '<td>' + fmt(r.batch) + '</td>' +
+        '<td>' + fmt(r.storage) + '</td>' +
+        '<td>' + r.start_ts + '</td>' +
+        '<td>' + fmt(r.end_ts) + '</td>' +
+        '<td>' + r.hours + 'h</td>' +
+        '<td><span class="badge ' + r.status + '">' + (STAGE[r.status] || r.status) + '</span></td>' +
+        '<td>' + (r.status === "running" ? '<button onclick="stopSample(' + r.id + ')">结束</button>' : '') + '</td>';
+      tb.appendChild(tr);
+    });
+  }
+
+  async function load() {
+    try {
+      const resp = await fetch(API);
+      const rows = await resp.json();
+      renderRunning(rows);
+      renderTable(rows);
+    } catch (e) {
+      el("runningBox").className = "box empty";
+      el("runningBox").textContent = "台账加载失败: " + e;
+    }
+  }
+
+  async function stopSample(id) {
+    if (!confirm("确认结束该样品的采集？结束后新数据不再归属它。")) return;
+    const resp = await fetch(API + "/" + id + "/stop", { method: "POST" });
+    const data = await resp.json();
+    if (!resp.ok) { showMsg(data.error || "操作失败", false); return; }
+    showMsg("已结束 " + data.code, true);
+    load();
+  }
+
+  el("f").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const body = {
+      code: el("code").value.trim(),
+      category: el("category").value.trim(),
+      batch: el("batch").value.trim(),
+      packaging: el("packaging").value,
+      storage: el("storage").value,
+      plan_hours: el("plan_hours").value,
+      interval_s: el("interval_s").value,
+      note: el("note").value.trim(),
+    };
+    const resp = await fetch(API, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showMsg(data.error || "创建失败", false); return; }
+    showMsg("已开始采集 " + data.code + "（" + data.category + "）", true);
+    el("code").value = "";
+    el("note").value = "";
+    load();
+  });
+
+  load();
+  setInterval(load, 30000);
+</script>
+</body>
+</html>

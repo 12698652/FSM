@@ -28,7 +28,8 @@ from sklearn.model_selection import train_test_split
 
 from config import (DEMO_BEFORE, LABELS_PATH, PSEUDO_FRESH_MAX,
                     PSEUDO_SLIGHT_MAX, PSEUDO_WARNING_MAX, SESSION_GAP_MIN,
-                    TVBN_FRESH_MAX, TVBN_SLIGHT_MAX, TVBN_WARNING_MAX, TRAIN_DB_PATH)
+                    TVBN_FRESH_MAX, TVBN_SLIGHT_MAX, TVBN_WARNING_MAX,
+                    TRAIN_DB_PATH, USE_DB_QUALITY_FLAGS)
 
 # ============ 可调参数 ============
 WINDOW_SIZE = 60        # 滑动窗口: 60 个采样点(60分钟)
@@ -77,6 +78,27 @@ SPIKE_WINDOWS = [("2026-10-01 19:02:00", "2026-10-01 19:07:00"),
 FIRMWARE_TRANSITION = ("2026-10-04 18:05:00", "2026-10-04 19:04:20")
 
 
+def _drop_quality_flagged(df):
+    """按 audit.py 写入的 quality_flags（severity=error）剔除异常段
+    训练库里没有该表（如旧的云端快照）时直接跳过，不影响已有流程
+    """
+    try:
+        conn = sqlite3.connect(TRAIN_DB_PATH)
+        rows = conn.execute(
+            "SELECT start_ts, end_ts FROM quality_flags WHERE severity='error'").fetchall()
+        conn.close()
+    except sqlite3.Error:
+        return df
+    if not rows:
+        return df
+    ts = pd.to_datetime(df["timestamp"], errors="coerce")
+    mask = pd.Series(False, index=df.index)
+    for a, b in rows:
+        mask |= (ts >= a) & (ts <= b)
+    print(f"[清洗] 剔除质检异常段 {int(mask.sum())} 条（audit.py 自动检测，共 {len(rows)} 段）")
+    return df[~mask]
+
+
 def load_frame(source):
     """读取数据库并按来源过滤（demo=模拟数据 / real=实测数据）"""
     print(f"[数据源] 训练库 = {TRAIN_DB_PATH}")
@@ -118,6 +140,8 @@ def load_frame(source):
             mask |= sel
         print(f"[清洗] 剔除无标签空档段 {int(mask.sum())} 条（会被标签前向填充污染）")
         df = df[~mask]
+    if source != "demo" and USE_DB_QUALITY_FLAGS:
+        df = _drop_quality_flagged(df)
     df = df.reset_index(drop=True)
     print(f"[数据] 来源={source} | 全库 {n_all} 条 → 选用 {len(df)} 条")
     return df

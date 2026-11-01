@@ -103,6 +103,52 @@ def cmd_new(args):
     print("填好后另存为 data/labels.csv，再执行: python server/label_tool.py check")
 
 
+def cmd_from_samples(args):
+    """按样品台账生成待填标注模板：一个样品一段，整段确认阶段变化
+    与 new 的区别：模板行自带 sample_id / category，可直接按样品回溯实验条件，
+    不再依赖 preprocess 里硬编码的时间段。
+    """
+    from datetime import datetime
+
+    from experiments import TS_FMT, connect as exp_connect, list_samples
+
+    conn = exp_connect(DB_PATH)
+    rows = list(list_samples(conn, limit=args.limit))[::-1]   # 按开始时间正序
+    conn.close()
+    if not rows:
+        raise SystemExit("暂无样品记录：先用 python server/experiments.py new "
+                         "或网页 /samples 新建样品")
+
+    now = datetime.now()
+    step = timedelta(hours=args.every)
+    out = []
+    for r in rows:
+        if r["status"] == "aborted":
+            continue
+        t = datetime.strptime(r["start_ts"], TS_FMT)
+        end = datetime.strptime(r["end_ts"], TS_FMT) if r["end_ts"] else now
+        while t <= end:
+            out.append({
+                "sample_id": r["id"],
+                "sample_code": r["code"],
+                "category": r["category"],
+                "timestamp": t.strftime(TS_FMT),
+                "stage": "", "tvb_n": "", "ph": "", "note": "",
+            })
+            t += step
+
+    df = pd.DataFrame(out, columns=["sample_id", "sample_code", "category",
+                                    "timestamp", "stage", "tvb_n", "ph", "note"])
+    os.makedirs(os.path.dirname(WORK_PATH), exist_ok=True)
+    df.to_csv(WORK_PATH, index=False, encoding="utf-8-sig")
+    n_samples = df["sample_id"].nunique()
+    print(f"已生成待填模板 → {WORK_PATH}（{n_samples} 个样品 / {len(df)} 行）")
+    print("填法: 同一段样品内，找出阶段切换的时间点，填 stage=0/1/2/3 "
+          "（0=新鲜 1=预警 2=轻微变质 3=腐坏）；阶段不变的相邻行留空即可，"
+          "preprocess 会按「向后填充」沿用上一阶段")
+    print("填好后另存为 data/labels.csv，再执行: python server/label_tool.py check")
+
+
 def cmd_check(_args):
     print(f"数据库: {DB_PATH}")
     df = load_readings()
@@ -110,6 +156,26 @@ def cmd_check(_args):
     real_mask = ts >= DEMO_BEFORE
     n_real = int(real_mask.sum())
     print(f"实测数据(>= {DEMO_BEFORE}): {n_real} 条")
+
+    # 样品归属统计：新流程下每条数据都带 sample_id，先确认归属没断
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        stats = conn.execute(
+            "SELECT e.code, e.category, e.status, COUNT(m.id) FROM experiments e "
+            "LEFT JOIN measurements m ON m.sample_id = e.id "
+            "GROUP BY e.id ORDER BY e.start_ts DESC").fetchall()
+        unassigned = conn.execute(
+            "SELECT COUNT(*) FROM measurements WHERE sample_id IS NULL").fetchone()[0]
+        conn.close()
+        if stats:
+            print("样品归属:")
+            for code, cat, status, n in stats:
+                print(f"  {code:<14} {cat:<6} {status:<8} {n:>6} 条")
+            print(f"  未归属(旧数据/空舱) {unassigned} 条")
+        else:
+            print("样品归属: 台账为空（旧流程，按时间间隔切场次）")
+    except sqlite3.Error as e:
+        print(f"样品归属: 读取失败（{e}）")
 
     if not os.path.exists(LABELS_PATH):
         print(f"\n[未就绪] 找不到 {LABELS_PATH}")
@@ -160,12 +226,16 @@ def main():
     ap = argparse.ArgumentParser(description="真实标签采集助手")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status", help="查看数据库时间范围与标签文件状态")
-    p_new = sub.add_parser("new", help="生成待填标签模板")
+    p_new = sub.add_parser("new", help="生成待填标签模板（按时间点，旧方式）")
     p_new.add_argument("--hours", type=int, default=72, help="回溯小时数（默认 72）")
     p_new.add_argument("--every", type=int, default=4, help="采样间隔小时（默认 4）")
+    p_fs = sub.add_parser("from-samples", help="按样品台账生成待填模板（推荐，带 sample_id）")
+    p_fs.add_argument("--every", type=int, default=4, help="采样间隔小时（默认 4）")
+    p_fs.add_argument("--limit", type=int, default=200, help="最多包含多少个样品")
     sub.add_parser("check", help="校验 data/labels.csv")
     args = ap.parse_args()
-    {"status": cmd_status, "new": cmd_new, "check": cmd_check}[args.cmd](args)
+    {"status": cmd_status, "new": cmd_new, "from-samples": cmd_from_samples,
+     "check": cmd_check}[args.cmd](args)
 
 
 if __name__ == "__main__":

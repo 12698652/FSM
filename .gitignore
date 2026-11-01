@@ -22,6 +22,7 @@ soft/data/labels_work.xlsx
 soft/data/labels_template.csv
 soft/data/overview_*.png
 soft/data/shap_importance.png
+soft/data/quality/
 
 # ---- 编辑器 / 系统 ----
 .trae/

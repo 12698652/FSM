@@ -12,6 +12,7 @@ import paho.mqtt.client as mqtt
 
 from config import (CLIENT_ID_BRIDGE, CSV_PATH, DB_PATH, MQTT_APPID,
                     MQTT_HOST, MQTT_PORT, MQTT_SECRETKEY, TOPIC)
+import experiments
 
 CSV_HEADER = "timestamp,voc,co2eq,tvoc,temp,humi,nh3_adc"
 
@@ -30,19 +31,24 @@ def init_db():
         humidity FLOAT,
         nh3_adc INT)""")
     conn.commit()
+    experiments.ensure_schema(conn)   # 样品台账表 + measurements.sample_id 列
     return conn
 
 
 def save_row(conn, data):
-    """一条传感器数据 → SQLite + CSV 双写"""
+    """一条传感器数据 → SQLite + CSV 双写
+    入库时按当前采集窗口打 sample_id（无进行中样品则为 NULL）
+    """
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   # 统一按服务器时间入库（忽略设备端时间戳）
+    sample_id = experiments.active_sample_id(conn, ts)
     row = (ts, data.get("voc"), data.get("co2eq"), data.get("tvoc"),
            data.get("temp"), data.get("humi"), data.get("nh3_adc"))
     conn.execute(
-        "INSERT INTO measurements (timestamp, voc, co2eq, tvoc, temperature, humidity, nh3_adc) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)", row)
+        "INSERT INTO measurements (timestamp, voc, co2eq, tvoc, temperature, humidity, "
+        "nh3_adc, sample_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", row + (sample_id,))
     conn.commit()
 
+    # CSV 保持原表头（历史文件已是 7 列，加列会变乱）；sample_id 只在数据库中
     need_header = not os.path.exists(CSV_PATH)
     with open(CSV_PATH, "a", encoding="utf-8") as f:
         if need_header:

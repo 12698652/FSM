@@ -2,13 +2,24 @@
 """Web 可视化：实时数据看板（手机浏览器 / Tailscale 远程均可访问）
 运行: python app.py  然后浏览器打开 http://<本机IP>:5000
 """
+import os
 import sqlite3
 
 from flask import Flask, jsonify, render_template, request
 
-from config import DB_PATH, WEB_HOST, WEB_PORT
+import audit
+import experiments
+from config import (CATEGORIES, DB_PATH, DEFAULT_PLAN_HOURS,
+                    DEFAULT_SAMPLE_INTERVAL_S, PACKAGING_OPTIONS,
+                    STORAGE_OPTIONS, WEB_HOST, WEB_PORT)
 
 app = Flask(__name__)
+
+try:
+    _conn = experiments.connect(DB_PATH)
+    _conn.close()
+except Exception as e:      # 数据库只读/不存在时不阻塞看板启动
+    print(f"[app] 样品台账初始化失败: {e}")
 
 _predictor = None
 
@@ -96,6 +107,85 @@ def api_predict():
                  "FROM (SELECT * FROM measurements ORDER BY id DESC LIMIT ?) "
                  "ORDER BY id ASC", (w,))
     return jsonify(_predictor.predict([dict(r) for r in rows]))
+
+
+# ===== 样品台账（实验编排）=====
+def _samples_context(**extra):
+    ctx = dict(categories=CATEGORIES, packagings=PACKAGING_OPTIONS,
+               storages=STORAGE_OPTIONS, default_hours=DEFAULT_PLAN_HOURS,
+               default_interval=DEFAULT_SAMPLE_INTERVAL_S, code="")
+    ctx.update(extra)
+    return ctx
+
+
+@app.route("/samples")
+def samples_page():
+    """样品台账：进行中的样品 + 新建表单 + 历史列表"""
+    return render_template("samples.html", **_samples_context())
+
+
+@app.route("/s/<code>")
+def sample_scan(code):
+    """扫码落地页：手机上打开即填品类、开始采集（编号已存在时提交会返回 409）"""
+    return render_template("samples.html", **_samples_context(code=code))
+
+
+@app.route("/api/samples")
+def api_samples():
+    conn = experiments.connect()
+    try:
+        rows = experiments.list_samples(conn, limit=min(int(request.args.get("limit", 200)), 1000))
+        return jsonify([experiments.to_dict(r) for r in rows])
+    finally:
+        conn.close()
+
+
+@app.route("/api/samples", methods=["POST"])
+def api_sample_create():
+    data = request.get_json(silent=True) or request.form.to_dict()
+    if not (data.get("code") or "").strip():
+        return jsonify({"error": "样品编号不能为空"}), 400
+    if not (data.get("category") or "").strip():
+        return jsonify({"error": "品类不能为空"}), 400
+    conn = experiments.connect()
+    try:
+        row = experiments.create_sample(
+            conn, code=data.get("code"), category=data.get("category"),
+            batch=data.get("batch") or None, packaging=data.get("packaging") or None,
+            storage=data.get("storage") or None,
+            plan_hours=data.get("plan_hours") or None,
+            interval_s=data.get("interval_s") or None,
+            note=data.get("note") or None)
+        return jsonify(experiments.to_dict(row)), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+    finally:
+        conn.close()
+
+
+@app.route("/api/samples/<int:sid>/stop", methods=["POST"])
+def api_sample_stop(sid):
+    data = request.get_json(silent=True) or {}
+    aborted = bool(data.get("aborted"))
+    conn = experiments.connect()
+    try:
+        row = experiments.stop_sample(conn, sid=sid, aborted=aborted)
+        payload = experiments.to_dict(row)
+        if not aborted:
+            # 每场采集结束自动出一份质量报告并写入剔除标记
+            try:
+                path, stats = audit.audit_sample(conn, row)
+                payload["quality"] = {"report": os.path.basename(path),
+                                      "valid_pct": round(stats["valid_pct"], 1),
+                                      "gap_count": stats["gap_count"],
+                                      "error_points": stats["error_points"]}
+            except Exception as e:       # 审计失败不影响结束采集
+                payload["quality"] = {"error": str(e)}
+        return jsonify(payload)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 409
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":

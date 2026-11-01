@@ -64,3 +64,18 @@ TVBN_SLIGHT_MAX = 25.0
 PSEUDO_FRESH_MAX = 700
 PSEUDO_WARNING_MAX = 900
 PSEUDO_SLIGHT_MAX = 1200
+
+# ===== 实验编排（样品台账，见 experiments.py）=====
+# 网页/扫码新建样品时的预设选项，可自行增删（填自定值也不拦截）
+CATEGORIES = ["猪肉", "牛肉", "牛奶", "面包", "熟鸡蛋"]
+PACKAGING_OPTIONS = ["敞口", "保鲜膜", "真空包装", "原包装"]
+STORAGE_OPTIONS = ["常温25℃", "冷藏4℃", "冷冻-18℃"]
+DEFAULT_PLAN_HOURS = 72          # 默认计划采集时长(h)
+DEFAULT_SAMPLE_INTERVAL_S = 60   # 默认采样间隔(s)，需与固件一致，仅作台账记录
+# 扫码链接前缀（手机扫二维码打开 <base>/s/<code>）；留空则由 CLI 传入或手工拼接
+SAMPLE_BASE_URL = os.environ.get("SAMPLE_BASE_URL", "")
+
+# ===== 数据质量审计（见 audit.py）=====
+# 训练前自动读取同库 quality_flags 表中 severity=error 的异常段并剔除，
+# 不再依赖 preprocess 顶部硬编码的时间段
+USE_DB_QUALITY_FLAGS = True
