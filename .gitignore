@@ -12,6 +12,17 @@ firmware/.pio/
 soft/logs/
 *.log
 
+# ---- 采集数据（仅存服务器 gjn，不入 Git）----
+soft/data/*.db
+soft/data/measurements.csv
+soft/data/baseline_clean_*.csv
+soft/data/labels.csv
+soft/data/labels_work.csv
+soft/data/labels_work.xlsx
+soft/data/labels_template.csv
+soft/data/overview_*.png
+soft/data/shap_importance.png
+
 # ---- 编辑器 / 系统 ----
 .trae/
 .eda_tmp/
