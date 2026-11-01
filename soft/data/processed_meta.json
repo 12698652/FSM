@@ -1,11 +1,22 @@
 {
-  "source": "demo",
-  "label_source": "pseudo(NH3阈值, 仅演示)",
-  "n_sessions": 1,
+  "source": "real",
+  "label_source": "real(labels.csv)",
+  "n_sessions": 2,
   "window": 60,
   "stride": 2,
-  "split": "单场次: 按标签分层随机切分(70/30)（注意: 重叠窗口会带来乐观偏差, 真实实验请用多场次）",
-  "train": 987,
-  "test": 424,
-  "generated_at": "2026-09-24 01:20:57"
+  "split": "全数据按标签分层随机切分(70/30)（重叠窗口会带来乐观偏差, 不作为泛化结论）",
+  "split_mode": "stratified",
+  "train": 2010,
+  "test": 743,
+  "generated_at": "2026-10-05 00:33:24",
+  "check": {
+    "desc": "2026-09-27 21:33:00 ~ 2026-09-28 01:03:00",
+    "n": 72,
+    "dist": {
+      "Fresh": 0,
+      "Warning": 0,
+      "Slight": 72,
+      "Spoiled": 0
+    }
+  }
 }

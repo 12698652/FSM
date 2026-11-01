@@ -16,22 +16,36 @@ class StagePredictor:
         self.sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
         with open(meta_path, encoding="utf-8") as f:
             self.meta = json.load(f)
-        self.lo = np.array(self.meta["norm_lo"], dtype=np.float32)
-        self.hi = np.array(self.meta["norm_hi"], dtype=np.float32)
         self.window = int(self.meta["window"])
-        self.feats = list(self.meta["feature_names"])[:6]
+        # 原始输入特征 = 特征名中不含派生特征(以 d_ 开头)的部分；
+        # Δ 派生特征(ΔNH₃/ΔVOC)排在末尾，由窗口首末值现算，不参与归一化参数。
+        names = [str(x) for x in self.meta["feature_names"]]
+        self.feats = [n for n in names if not n.startswith("d_")]
+        self.n_delta = len([n for n in names if n.startswith("d_")])
+        self.lo = np.array(self.meta["norm_lo"], dtype=np.float32)[:len(self.feats)]
+        self.hi = np.array(self.meta["norm_hi"], dtype=np.float32)[:len(self.feats)]
+        # 通道方向修正：必须与训练端 preprocess.py 的 FEAT_SIGN 完全一致，
+        # 否则 voc(电阻,与浓度反相关) 会被喂成反方向 → 预测整体错乱。
+        sign = self.meta.get("feat_sign")
+        self.sign = (np.array(sign, dtype=np.float32)[:len(self.feats)]
+                     if sign is not None else np.ones(len(self.feats), np.float32))
         self.stages = [str(s) for s in self.meta["stage_names"]]
 
     def build_input(self, rows):
-        """rows: 按时间正序的 dict 列表，需含 6 个原始特征"""
+        """rows: 按时间正序的 dict 列表，需含原始气味特征（voc/co2eq/tvoc/nh3_adc）"""
         if len(rows) < self.window:
             return None
         rows = rows[-self.window:]
         raw = np.array([[float(r[f]) for f in self.feats] for r in rows], dtype=np.float32)
+        raw = raw * self.sign
         norm = (raw - self.lo) / (self.hi - self.lo)
-        feats = np.concatenate([norm, np.zeros((self.window, 2), np.float32)], axis=1)
-        feats[:, 6] = (norm[-1, 5] - norm[0, 5]) / self.window
-        feats[:, 7] = (norm[-1, 0] - norm[0, 0]) / self.window
+        n_raw = len(self.feats)
+        feats = np.concatenate([norm, np.zeros((self.window, self.n_delta), np.float32)], axis=1)
+        if self.n_delta >= 2:
+            i_nh3 = self.feats.index("nh3_adc")
+            i_voc = self.feats.index("voc")
+            feats[:, n_raw]     = (norm[-1, i_nh3] - norm[0, i_nh3]) / self.window
+            feats[:, n_raw + 1] = (norm[-1, i_voc] - norm[0, i_voc]) / self.window
         return feats[None, ...].astype(np.float32)
 
     def predict(self, rows):

@@ -28,21 +28,59 @@ from sklearn.model_selection import train_test_split
 
 from config import (DEMO_BEFORE, LABELS_PATH, PSEUDO_FRESH_MAX,
                     PSEUDO_SLIGHT_MAX, PSEUDO_WARNING_MAX, SESSION_GAP_MIN,
-                    TVBN_FRESH_MAX, TVBN_SLIGHT_MAX, TVBN_WARNING_MAX, DB_PATH)
+                    TVBN_FRESH_MAX, TVBN_SLIGHT_MAX, TVBN_WARNING_MAX, TRAIN_DB_PATH)
 
 # ============ 可调参数 ============
 WINDOW_SIZE = 60        # 滑动窗口: 60 个采样点(60分钟)
 STRIDE = 2              # 窗口步长(重叠采样)
 TEST_RATIO = 0.3        # 单场次时的测试比例
-FEATURES = ["voc", "co2eq", "tvoc", "temperature", "humidity", "nh3_adc"]
+# 模型输入特征：仅气味类通道，不含温度/湿度。
+#   温度/湿度受环境影响极大（密闭盒 vs 开放空气、昼夜温差），与腐败无直接因果，
+#   纳入后模型会把「潮湿/偏冷的环境」误关联为变质（2026-10-04 洁净空气被误判为
+#   Warning 即因此）。故从模型输入中移除，仅保留与腐败直接相关的挥发物信号。
+#   温湿度仍在 OLED/网页展示，只是不再喂给模型。
+FEATURES = ["voc", "co2eq", "tvoc", "nh3_adc"]
+DELTA_FEATURES = ["d_nh3", "d_voc"]   # 派生特征：末尾追加的窗口首末变化率
+# voc 通道方向修正：BME680 的 voc = gas_resistance/1000(kΩ)，是「电阻」——
+#   洁净空气电阻大、污染气体电阻小，方向与其它通道相反。建模前逐通道乘此符号，
+#   使「数值越大=污染越重」全通道一致；ΔVOC 派生特征随之自动正确。
+#   该符号随训练集一并存入产物，推理端必须用同一套（见 inference.py）。
+FEAT_SIGN = np.array([-1, 1, 1, 1], dtype=np.float32)
 STAGE_NAMES = ["Fresh", "Warning", "Slight", "Spoiled"]   # 新鲜/预警/轻微变质/腐坏
 N_CLASSES = 4
 SEED = 42
 
+# 空舱段（无样品在舱）：该区间实测数据阶段不可信，训练/测试一律剔除
+EMPTY_CHAMBER = [("2026-09-27 16:52:00", "2026-09-27 21:33:00")]
+
+# 独立抽查段（隔日回舱）：整段留出，不进训练/测试，仅作跨条件一致性抽查
+HOLDOUT_CHECK = ("2026-09-27 21:33:00", "2026-09-28 01:03:00")
+
+# 清洁空气基线段：作为 Fresh 参考，强制并入训练集（不进测试, 避免作弊式准确率）
+#   旧固件：10-01 下午 6 小时；新固件：10-04 19:04 起（升级后重置于洁净空气）。
+#   新固件段会被 labels.csv 末条(stage=3)前向填充污染, 故在 main() 中统一按 Fresh 重打标。
+BASELINE_WINDOWS = [("2026-10-01 17:00:00", "2026-10-01 23:00:00"),
+                    ("2026-10-04 19:04:20", None)]
+
+# 无标签空档段：无有效标签, 且会被标签前向填充(backward)污染, 训练/测试一律剔除
+# 09-28 抽查段结束 → 10-01 基线开始；10-01 基线结束 → 10-02 重启自热瞬态结束（有界, 勿写成 None 以免吞掉后续新实验）
+UNLABELED_GAP = [("2026-09-28 01:03:00", "2026-10-01 17:00:00"),
+                 ("2026-10-01 23:00:00", "2026-10-02 06:00:00")]
+
+# 人为尖峰段（人员靠近板子 / 重启自热瞬态）：非真实腐败信号，不作基线/标签/训练
+# 唯一来源：data/export_baseline.py 从此处导入复用，新增尖峰只改这一处
+SPIKE_WINDOWS = [("2026-10-01 19:02:00", "2026-10-01 19:07:00"),
+                 ("2026-10-01 23:00:00", "2026-10-01 23:16:00")]
+
+# 新旧固件切换过渡段：10-04 18:05 起设备重启(自热温漂) + SGP30 基线重收敛, 至 19:04 新固件生效。
+#   该段温漂剧烈、气味基线不可信（既非腐坏也非洁净），训练/测试一律剔除。
+FIRMWARE_TRANSITION = ("2026-10-04 18:05:00", "2026-10-04 19:04:20")
+
 
 def load_frame(source):
     """读取数据库并按来源过滤（demo=模拟数据 / real=实测数据）"""
-    conn = sqlite3.connect(DB_PATH)
+    print(f"[数据源] 训练库 = {TRAIN_DB_PATH}")
+    conn = sqlite3.connect(TRAIN_DB_PATH)
     df = pd.read_sql_query("SELECT * FROM measurements ORDER BY timestamp ASC", conn)
     conn.close()
     n_all = len(df)
@@ -50,6 +88,36 @@ def load_frame(source):
         df = df[df["timestamp"] < DEMO_BEFORE]
     elif source == "real":
         df = df[df["timestamp"] >= DEMO_BEFORE]
+    if source != "demo" and EMPTY_CHAMBER:
+        ts = pd.to_datetime(df["timestamp"], errors="coerce")
+        mask = pd.Series(False, index=df.index)
+        for a, b in EMPTY_CHAMBER:
+            mask |= (ts >= a) & (ts < b)
+        print(f"[清洗] 剔除空舱段 {int(mask.sum())} 条（无样品在舱, 阶段不可信）")
+        df = df[~mask]
+    if source != "demo" and SPIKE_WINDOWS:
+        ts = pd.to_datetime(df["timestamp"], errors="coerce")
+        mask = pd.Series(False, index=df.index)
+        for a, b in SPIKE_WINDOWS:
+            mask |= (ts >= a) & (ts < b)
+        print(f"[清洗] 剔除人为尖峰段 {int(mask.sum())} 条（人员靠近/重启瞬态, 不作基线/标签）")
+        df = df[~mask]
+    if source != "demo" and FIRMWARE_TRANSITION:
+        ts = pd.to_datetime(df["timestamp"], errors="coerce")
+        a, b = FIRMWARE_TRANSITION
+        mask = (ts >= a) & (ts < b)
+        print(f"[清洗] 剔除固件切换过渡段 {int(mask.sum())} 条（重启自热/基线重收敛, 语义不连续）")
+        df = df[~mask]
+    if source != "demo" and UNLABELED_GAP:
+        ts = pd.to_datetime(df["timestamp"], errors="coerce")
+        mask = pd.Series(False, index=df.index)
+        for a, b in UNLABELED_GAP:
+            sel = ts >= a
+            if b:
+                sel &= ts < b
+            mask |= sel
+        print(f"[清洗] 剔除无标签空档段 {int(mask.sum())} 条（会被标签前向填充污染）")
+        df = df[~mask]
     df = df.reset_index(drop=True)
     print(f"[数据] 来源={source} | 全库 {n_all} 条 → 选用 {len(df)} 条")
     return df
@@ -121,8 +189,8 @@ def detect_sessions(ts_dt):
 
 
 def raw_windows(g, window, stride):
-    """单个场次的原始特征窗口（未归一化）+ 标签，标签取窗口末点"""
-    raw = g[FEATURES].to_numpy(dtype=np.float32)
+    """单个场次的原始特征窗口（未归一化，已做通道方向修正）+ 标签，标签取窗口末点"""
+    raw = g[FEATURES].to_numpy(dtype=np.float32) * FEAT_SIGN
     X, y = [], []
     n = len(raw)
     if n < window:
@@ -136,10 +204,12 @@ def raw_windows(g, window, stride):
 def finalize(X_raw, lo, hi):
     """用训练集统计量做 Min-Max 归一化，并追加增量特征 ΔNH₃ / ΔVOC"""
     norm = (X_raw - lo) / (hi - lo)
-    n, w, _ = norm.shape
-    feats = np.concatenate([norm, np.zeros((n, w, 2), dtype=np.float32)], axis=2)
-    feats[:, :, 6] = (norm[:, -1, 5] - norm[:, 0, 5])[:, None] / w   # ΔNH₃/步
-    feats[:, :, 7] = (norm[:, -1, 0] - norm[:, 0, 0])[:, None] / w   # ΔVOC/步
+    n, w, n_feat = norm.shape
+    feats = np.concatenate([norm, np.zeros((n, w, len(DELTA_FEATURES)), dtype=np.float32)], axis=2)
+    i_nh3 = FEATURES.index("nh3_adc")
+    i_voc = FEATURES.index("voc")
+    feats[:, :, n_feat]     = (norm[:, -1, i_nh3] - norm[:, 0, i_nh3])[:, None] / w   # ΔNH₃/步
+    feats[:, :, n_feat + 1] = (norm[:, -1, i_voc] - norm[:, 0, i_voc])[:, None] / w   # ΔVOC/步
     return feats.astype(np.float32)
 
 
@@ -148,6 +218,9 @@ def main():
     ap.add_argument("--source", choices=["auto", "real", "demo"], default="auto")
     ap.add_argument("--window", type=int, default=WINDOW_SIZE)
     ap.add_argument("--stride", type=int, default=STRIDE)
+    ap.add_argument("--split", choices=["session", "stratified", "chrono"], default="session",
+                    help="训练/测试切分方式: session=按场次(默认, 最后场次做测试); "
+                         "stratified=全数据按标签分层随机; chrono=按时间先后(前段训练/后段测试)")
     args = ap.parse_args()
 
     source = "real" if args.source == "auto" else args.source
@@ -157,6 +230,31 @@ def main():
 
     df, label_source = attach_labels(df, load_labels(), source)
     df = df.sort_values("timestamp_dt").reset_index(drop=True)
+
+    df_check, check_desc = None, None
+    if HOLDOUT_CHECK is not None:
+        a, b = HOLDOUT_CHECK
+        hm = df["timestamp_dt"] >= a
+        if b:
+            hm &= df["timestamp_dt"] < b
+        df_check = df[hm].reset_index(drop=True)
+        df = df[~hm].reset_index(drop=True)
+        check_desc = f"{a} ~ {b or '最新'}"
+        print(f"[抽查] 独立留出 {len(df_check)} 条（{check_desc}），不参与训练/测试")
+
+    df_base_parts = []
+    if BASELINE_WINDOWS:
+        for a, b in BASELINE_WINDOWS:
+            bm = df["timestamp_dt"] >= a
+            if b:
+                bm &= df["timestamp_dt"] < b
+            part = df[bm].copy()
+            if len(part):
+                part["stage"] = 0   # 清洁空气恒为 Fresh（覆盖标签前向填充）
+                df_base_parts.append(part.reset_index(drop=True))
+                print(f"[基线] 抽出清洁空气基线 {len(part)} 条（{a} ~ {b or '最新'}），并入训练集")
+            df = df[~bm].reset_index(drop=True)
+
     df["session"] = detect_sessions(df["timestamp_dt"])
     n_sess = int(df["session"].nunique())
     print(f"[标签] {label_source} | 覆盖 {len(df)} 条 | 阶段分布: " +
@@ -176,7 +274,19 @@ def main():
     y_all = np.concatenate(ys)
     sess_all = np.concatenate(sess)
 
-    if n_sess >= 2:
+    if args.split == "stratified":
+        idx = np.arange(len(X_raw))
+        tr, te = train_test_split(idx, test_size=TEST_RATIO,
+                                  stratify=y_all, random_state=SEED)
+        split_desc = (f"全数据按标签分层随机切分({int((1 - TEST_RATIO) * 100)}/{int(TEST_RATIO * 100)})"
+                      "（重叠窗口会带来乐观偏差, 不作为泛化结论）")
+    elif args.split == "chrono":
+        n_all = len(X_raw)
+        cut = int(n_all * (1 - TEST_RATIO))
+        tr, te = np.arange(0, cut), np.arange(cut, n_all)
+        split_desc = (f"按时间先后切分(前{int((1 - TEST_RATIO) * 100)}%训练/后{int(TEST_RATIO * 100)}%测试)"
+                      "（更贴近'预测未来腐败'场景）")
+    elif n_sess >= 2:
         sessions = sorted(df["session"].unique())
         test_sess = sessions[-1]
         tr = np.where(sess_all != test_sess)[0]
@@ -190,31 +300,59 @@ def main():
                      "（注意: 重叠窗口会带来乐观偏差, 真实实验请用多场次）"
     print(f"[切分] {split_desc}")
 
-    lo = X_raw[tr].reshape(-1, len(FEATURES)).min(axis=0)
-    hi = X_raw[tr].reshape(-1, len(FEATURES)).max(axis=0)
+    X_train_raw, y_train = X_raw[tr], y_all[tr]
+    n_base_win = 0
+    for part in df_base_parts:
+        if len(part) >= args.window:
+            Xb, yb = raw_windows(part, args.window, args.stride)
+            if Xb is not None and len(Xb):
+                X_train_raw = np.concatenate([X_train_raw, Xb])
+                y_train = np.concatenate([y_train, yb])
+                n_base_win += len(Xb)
+    if n_base_win:
+        print(f"[基线] 新增训练窗口 {n_base_win} 个（清洁空气 Fresh 参考）")
+
+    lo = X_train_raw.reshape(-1, len(FEATURES)).min(axis=0)
+    hi = X_train_raw.reshape(-1, len(FEATURES)).max(axis=0)
     hi = np.where(hi - lo < 1e-8, hi + 1e-8, hi)
     print("[归一化] 参数仅在训练集拟合")
 
-    X_train, X_test = finalize(X_raw[tr], lo, hi), finalize(X_raw[te], lo, hi)
-    y_train, y_test = y_all[tr], y_all[te]
+    X_train, X_test = finalize(X_train_raw, lo, hi), finalize(X_raw[te], lo, hi)
+    y_test = y_all[te]
     print(f"[窗口] 训练 {X_train.shape} | 测试 {X_test.shape}")
     for tag, yy in (("训练", y_train), ("测试", y_test)):
         print(f"       {tag}标签分布: " + ", ".join(
             f"{STAGE_NAMES[k]}={int((yy == k).sum())}" for k in range(N_CLASSES)))
 
+    X_check, y_check = None, None
+    if df_check is not None and len(df_check) >= args.window:
+        Xc, yc = raw_windows(df_check, args.window, args.stride)
+        if Xc is not None and len(Xc):
+            X_check, y_check = finalize(Xc, lo, hi), yc
+            print(f"[抽查] 独立抽查窗口 {X_check.shape} | 分布: " + ", ".join(
+                f"{STAGE_NAMES[k]}={int((y_check == k).sum())}" for k in range(N_CLASSES)))
+
     os.makedirs("data", exist_ok=True)
-    np.savez_compressed(
-        "data/processed.npz",
+    save_kwargs = dict(
         X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test,
         norm_lo=lo, norm_hi=hi,
-        feature_names=np.array(FEATURES + ["d_nh3", "d_voc"]),
+        feature_names=np.array(FEATURES + DELTA_FEATURES),
+        feat_sign=FEAT_SIGN,
         stage_names=np.array(STAGE_NAMES),
         window=args.window, label_source=np.array(label_source), source=np.array(source),
     )
+    if X_check is not None:
+        save_kwargs["X_check"] = X_check
+        save_kwargs["y_check"] = y_check
+    np.savez_compressed("data/processed.npz", **save_kwargs)
     meta = {"source": source, "label_source": label_source, "n_sessions": n_sess,
             "window": args.window, "stride": args.stride, "split": split_desc,
+            "split_mode": args.split,
             "train": int(len(X_train)), "test": int(len(X_test)),
             "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    if X_check is not None:
+        meta["check"] = {"desc": check_desc, "n": int(len(y_check)),
+                         "dist": {STAGE_NAMES[k]: int((y_check == k).sum()) for k in range(N_CLASSES)}}
     with open("data/processed_meta.json", "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
     print("已保存 → data/processed.npz + data/processed_meta.json")

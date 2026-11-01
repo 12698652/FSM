@@ -138,7 +138,7 @@
 </div>
 
 <div class="cards">
-  <div class="card"><div class="label">VOC 指数</div><div class="value" id="v-voc">--</div><div class="unit">BME680</div></div>
+  <div class="card"><div class="label">VOC 污染指数</div><div class="value" id="v-voc">--</div><div class="unit">0-100 · BME680</div></div>
   <div class="card"><div class="label">eCO₂</div><div class="value" id="v-co2eq">--</div><div class="unit">ppm · SGP30</div></div>
   <div class="card"><div class="label">TVOC</div><div class="value" id="v-tvoc">--</div><div class="unit">ppb · SGP30</div></div>
   <div class="card"><div class="label">NH₃ (ADC)</div><div class="value" id="v-nh3">--</div><div class="unit">MQ-137</div></div>
@@ -172,8 +172,16 @@
 <script>
 // API 路径前缀自适应：PC 直跑为 ""，云上挂在 /gjn 下为 "/gjn"
 const BASE = location.pathname.replace(/\/(index\.html)?$/, "");
+// VOC 污染指数：BME680 的 voc 字段是气体电阻(kΩ)，洁净空气电阻大、污染时电阻小，
+// 方向与直觉相反。这里折算成「洁净=低、污染=高」的对数尺度指数(0~100)：
+// 锚点取自训练数据的电阻范围 1.4~12.5 kΩ（12.5→0，1.4→100），仅作显示，不改数据库与模型。
+function vocIndex(rKohm) {
+  const LO = 1.4, HI = 12.5;
+  const v = Math.log10(Math.max(rKohm, LO));
+  return Math.round(Math.min(1, Math.max(0, (Math.log10(HI) - v) / (Math.log10(HI) - Math.log10(LO)))) * 100);
+}
 const METRICS = {
-  voc:      { label: "VOC 指数",  color: "#3182ce" },
+  voc:      { label: "VOC 污染指数",  color: "#3182ce" },
   co2eq:    { label: "eCO₂ (ppm)", color: "#38a169" },
   tvoc:     { label: "TVOC (ppb)", color: "#d69e2e" },
   nh3_adc:  { label: "NH₃ ADC 值", color: "#e53e3e" },
@@ -225,7 +233,7 @@ function renderChart() {
     cache[0].timestamp.slice(0, 10) !== cache[cache.length - 1].timestamp.slice(0, 10);
   chart.data.labels = cache.map(r => (r.timestamp || "").slice(crossDay ? 5 : 11, 16));
   chart.data.datasets[0].label = m.label;
-  chart.data.datasets[0].data = cache.map(r => r[currentKey]);
+  chart.data.datasets[0].data = cache.map(r => currentKey === "voc" ? vocIndex(r.voc) : r[currentKey]);
   chart.data.datasets[0].borderColor = m.color;
   chart.data.datasets[0].backgroundColor = m.color + "20";
   chart.update();
@@ -234,7 +242,7 @@ function renderChart() {
 function renderCards(latest) {
   if (!latest || !latest.id) return;
   const set = (id, v) => document.getElementById(id).textContent = (v === null || v === undefined) ? "--" : v;
-  set("v-voc", latest.voc); set("v-co2eq", latest.co2eq); set("v-tvoc", latest.tvoc);
+  set("v-voc", latest.voc != null ? vocIndex(latest.voc) : null); set("v-co2eq", latest.co2eq); set("v-tvoc", latest.tvoc);
   set("v-nh3", latest.nh3_adc);
   set("v-temp", latest.temperature); set("v-humi", latest.humidity);
   const st = stageOf(latest);

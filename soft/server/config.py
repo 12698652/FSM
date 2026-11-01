@@ -24,7 +24,15 @@ _here = os.path.dirname(os.path.abspath(__file__))
 #   本地 soft/server/config.py → data 在上一级 soft/data
 #   云端 gjn/config.py         → data 在同级 gjn/data
 BASE_DIR = _here if os.path.isdir(os.path.join(_here, "data")) else os.path.dirname(_here)
-DB_PATH = os.path.join(BASE_DIR, "data", "food.db")
+# 数据库路径：默认本地 data/food.db；可用环境变量 FOOD_DB_PATH 覆盖（如训练切云端库 food_server.db）
+#   —— 这是「实时库」：mqtt_bridge 写入、app/label_tool 读取；勿改默认，改了会断采/串库
+DB_PATH = os.environ.get("FOOD_DB_PATH") or os.path.join(BASE_DIR, "data", "food.db")
+
+# 训练数据源：默认优先用更完整的云端快照 data/food_cloud.db（7x24 连续记录）；
+#   该文件不存在时（如云端服务器上）回退实时库 DB_PATH。仍可用 FOOD_DB_PATH 覆盖。
+#   仅用于训练/分析，绝不能被 mqtt_bridge 写入，故与实时库分开，避免串库。
+_cloud_snapshot = os.path.join(BASE_DIR, "data", "food_cloud.db")
+TRAIN_DB_PATH = os.environ.get("FOOD_DB_PATH") or (_cloud_snapshot if os.path.exists(_cloud_snapshot) else DB_PATH)
 CSV_PATH = os.path.join(BASE_DIR, "data", "measurements.csv")
 
 # ===== Flask Web 服务 =====

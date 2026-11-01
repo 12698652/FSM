@@ -42,6 +42,8 @@ def main():
         "window": window,
         "n_features": n_features,
         "feature_names": [str(x) for x in ckpt["feature_names"]],
+        "feat_sign": ([float(x) for x in ckpt["feat_sign"]]
+                      if ckpt.get("feat_sign") is not None else None),
         "stage_names": [str(x) for x in ckpt["stage_names"]],
         "norm_lo": [float(x) for x in ckpt["norm_lo"]],
         "norm_hi": [float(x) for x in ckpt["norm_hi"]],

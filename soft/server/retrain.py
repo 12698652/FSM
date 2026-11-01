@@ -74,11 +74,13 @@ def main():
     ap = argparse.ArgumentParser(description="一键重新训练与导出")
     ap.add_argument("--source", choices=["real", "demo", "auto"], default="real",
                     help="训练数据来源（默认 real 只用实测数据）")
+    ap.add_argument("--split", choices=["session", "stratified", "chrono"], default="session",
+                    help="训练/测试切分方式（透传 preprocess.py；stratified/chrono 可把最后场次纳入训练）")
     ap.add_argument("--with-rf", action="store_true", help="额外训练 RF/GBDT 基线做对比")
     ap.add_argument("--deploy", action="store_true", help="训练后自动上传模型并重启云端服务")
     args = ap.parse_args()
 
-    run("数据预处理", "preprocess.py", ["--source", args.source])
+    run("数据预处理", "preprocess.py", ["--source", args.source, "--split", args.split])
     if args.with_rf:
         run("RF/GBDT 基线", "train_rf.py")
     run("LSTM+Attention 训练", "train_lstm.py")

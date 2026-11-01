@@ -1,30 +1,56 @@
 {
   "model": "LSTM+Attention",
-  "accuracy": 0.9835,
-  "macro_f1": 0.9837,
+  "accuracy": 0.8277,
+  "macro_f1": 0.8016,
   "confusion_matrix": [
     [
-      236,
+      171,
+      0,
+      0,
+      1
+    ],
+    [
+      103,
+      84,
+      14,
+      0
+    ],
+    [
       1,
-      0
-    ],
-    [
-      6,
-      99,
+      0,
+      80,
       0
     ],
     [
       0,
       0,
-      82
+      9,
+      280
     ]
   ],
   "stages": [
     "Fresh",
     "Warning",
-    "Danger"
+    "Slight",
+    "Spoiled"
   ],
   "window": 60,
-  "best_epoch": 26,
-  "label_source": "pseudo(NH3阈值, 仅演示)"
+  "best_epoch": 50,
+  "label_source": "real(labels.csv)",
+  "independent_check": {
+    "n": 72,
+    "acc": 0.4167,
+    "true_dist": {
+      "Fresh": 0,
+      "Warning": 0,
+      "Slight": 72,
+      "Spoiled": 0
+    },
+    "pred_dist": {
+      "Fresh": 0,
+      "Warning": 18,
+      "Slight": 30,
+      "Spoiled": 24
+    }
+  }
 }

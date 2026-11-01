@@ -137,12 +137,31 @@ def train():
     print(classification_report(y_test_np, pred, labels=list(range(n_classes)),
                                 target_names=stage_names, zero_division=0))
 
+    check_metrics = None
+    if "X_check" in d.files:
+        X_check = torch.tensor(d["X_check"], dtype=torch.float32)
+        y_check_np = d["y_check"]
+        with torch.no_grad():
+            pred_c = model(X_check.to(device)).argmax(dim=1).cpu().numpy()
+        print(f"\n[独立抽查] 隔日回舱段（未参与训练/测试）共 {len(y_check_np)} 个窗口")
+        print("  真实分布: " + ", ".join(
+            f"{stage_names[k]}={int((y_check_np == k).sum())}" for k in range(n_classes)))
+        print("  预测分布: " + ", ".join(
+            f"{stage_names[k]}={int((pred_c == k).sum())}" for k in range(n_classes)))
+        check_metrics = {
+            "n": int(len(y_check_np)),
+            "acc": round(float(accuracy_score(y_check_np, pred_c)), 4),
+            "true_dist": {stage_names[k]: int((y_check_np == k).sum()) for k in range(n_classes)},
+            "pred_dist": {stage_names[k]: int((pred_c == k).sum()) for k in range(n_classes)},
+        }
+
     torch.save({"state_dict": model.state_dict(),
                 "n_features": n_features, "n_classes": n_classes,
                 "hidden1": HIDDEN1, "hidden2": HIDDEN2,
                 "norm_lo": d["norm_lo"], "norm_hi": d["norm_hi"],
                 "window": int(d["window"]),
                 "feature_names": [str(x) for x in d["feature_names"]],
+                "feat_sign": (d["feat_sign"] if "feat_sign" in d.files else None),
                 "stage_names": stage_names,
                 "label_source": label_source}, "model.pth")
     with open("metrics.json", "w", encoding="utf-8") as f:
@@ -150,7 +169,8 @@ def train():
                    "accuracy": round(acc, 4), "macro_f1": round(f1, 4),
                    "confusion_matrix": cm, "stages": stage_names,
                    "window": int(d["window"]), "best_epoch": best_epoch,
-                   "label_source": label_source}, f, ensure_ascii=False, indent=2)
+                   "label_source": label_source,
+                   "independent_check": check_metrics}, f, ensure_ascii=False, indent=2)
     print("\n已保存 → model.pth / metrics.json")
     return acc
 

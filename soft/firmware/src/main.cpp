@@ -9,6 +9,8 @@
  *   3. 上报周期 60 秒/次，匹配预处理 "60 点 = 60 分钟" 的窗口定义
  *   4. 时间戳由 PC 接收端统一按服务器时间写入，固件不再上报时间
  *   5. OLED(0x3C, SSD1306 128x64) 实时显示当前读数 + WiFi/MQTT 状态
+ *   6. SGP30 基线持久化：每 30min 存 NVS，上电恢复 → 断电重启后无需
+ *      等 1 小时基线重建，几分钟即回到可信读数（NVS 断电不丢、带磨损均衡）
  */
 #include <Arduino.h>
 #include <WiFi.h>
@@ -66,6 +68,7 @@
 #include "Adafruit_SGP30.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Preferences.h>
 
 #define I2C_SDA   11      // 板卡 I²C SDA = A4（与 Arduino Nano ESP32 一致）
 #define I2C_SCL   12      // 板卡 I²C SCL = A5（ESP32-S3 无 GPIO22，禁用 22~25）
@@ -75,6 +78,12 @@
 Adafruit_BME680 bme;      // I2C 地址 0x76
 Adafruit_SGP30  sgp;      // I2C 地址 0x58
 Adafruit_SSD1306 display(128, 64, &Wire, -1);   // SSD1306 128x64, I2C
+
+// SGP30 基线持久化（NVS）：上电恢复 + 定期保存
+// Sensirion 建议：基线在传感器稳定运行后读取；恢复后立即生效，免去约 1h 重建
+Preferences prefs;
+#define SGP_BASELINE_SAVE_MS  (30UL * 60UL * 1000UL)   // 保存周期 30min
+unsigned long lastBaselineSave = 0;
 
 // 最近一次采样（OLED 显示与 JSON 上报共用同一份数据）
 struct Reading {
@@ -95,11 +104,22 @@ void oledShow(const char *l1, const char *l2 = "", const char *l3 = "", const ch
   display.display();
 }
 
+// VOC 污染指数(0-100)：BME680 的 voc 是气体电阻(kΩ)，洁净电阻大、污染电阻小，
+// 与直觉相反。对数尺度折算成「洁净=低、污染=高」，锚点取训练数据电阻范围
+// 1.4~12.5 kΩ（12.5→0，1.4→100），与网页端 vocIndex() 保持同一公式，仅作显示。
+uint8_t vocIndex(float rKohm) {
+  const float LO = 1.4f, HI = 12.5f;
+  if (rKohm >= HI) return 0;
+  if (rKohm <= LO) return 100;
+  float s = (log10f(HI) - log10f(rKohm)) / (log10f(HI) - log10f(LO));
+  return (uint8_t)(constrain(s, 0.0f, 1.0f) * 100.0f + 0.5f);
+}
+
 void oledUpdate(bool wifiOk, bool mqttOk) {
   char l1[22], l2[22], l3[22], l4[22];
   snprintf(l1, sizeof(l1), "T:%.1fC  H:%.0f%%", last.temp, last.humi);
   snprintf(l2, sizeof(l2), "TVOC:%d  CO2:%d", last.sgpOk ? last.tvoc : -1, last.sgpOk ? last.co2eq : -1);
-  snprintf(l3, sizeof(l3), "VOC:%.0fk NH3:%d", last.voc, last.nh3);
+  snprintf(l3, sizeof(l3), "VOC:%3u/100 NH3:%d", vocIndex(last.voc), last.nh3);
   snprintf(l4, sizeof(l4), "WIFI:%s MQTT:%s", wifiOk ? "OK" : "--", mqttOk ? "OK" : "--");
   oledShow(l1, l2, l3, l4);
 }
@@ -126,13 +146,32 @@ int readNh3Median() {
   }
   return s[2];
 }
+
+// SGP30 湿度补偿所需：绝对湿度 AH(g/m³)，Sensirion Magnus 公式
+//   AH = 216.7 × (RH/100 × 6.112 × exp(17.62·T/(243.12+T))) / (273.15+T)
+float absHumidity(float tC, float rh) {
+  float es = 6.112f * expf(17.62f * tC / (243.12f + tC));   // 饱和水汽压(hPa)
+  return 216.7f * (rh / 100.0f * es) / (273.15f + tC);
+}
+
+// 反向换算：已知绝对湿度 AH(g/m³) 与目标温度，求该温度下的相对湿度 RH(%)
+//   用途：BME680 报的 RH 是「芯片温度(~41℃)」下的读数，直接上报会明显偏低；
+//   芯片与环境同处一舱、含湿量近似守恒，用 AH 折算到【补偿后环境温度】即得更接近真实的 RH。
+float rhFromAbsHumidity(float tC, float ah) {
+  float es = 6.112f * expf(17.62f * tC / (243.12f + tC));
+  return 100.0f * ah * (273.15f + tC) / (216.7f * es);
+}
 #endif
 
 WiFiClient   wifiClient;
 WiFiMulti    wifiMulti;
 PubSubClient mqtt(wifiClient);
-unsigned long lastPublish = 0;
-unsigned long bootTime    = 0;
+unsigned long lastPublish   = 0;
+unsigned long lastPublishOk = 0;      // 上次成功发布时刻（自愈看门狗基准）
+unsigned long bootTime      = 0;
+
+// 自愈看门狗：连续 30 分钟无一次成功发布（WiFi 掉/MQTT 挂/程序异常）→ 重启自愈
+#define PUBLISH_FAIL_REBOOT_MS  (30UL * 60UL * 1000UL)
 
 // ---------- WiFi（已知网络 + WiFiManager 网页配网）----------
 // 进入配网模式时的回调：串口 + OLED 提示怎么连
@@ -181,16 +220,17 @@ void setupWiFi() {
 }
 
 // ---------- MQTT ----------
+// 有界重连：最多 10 次，绝不永久阻塞 loop()（阻塞会导致 OLED 冻结、自愈看门狗失效）
 void mqttReconnect() {
-  while (!mqtt.connected()) {
+  for (int i = 0; i < 10 && !mqtt.connected(); i++) {
     Serial.println("[MQTT] 连接巴法云...");
     // 方式一认证：clientId = 私钥（用户名密码留空）
     if (mqtt.connect(MQTT_KEY)) {
       Serial.println("[MQTT] 连接成功");
-    } else {
-      Serial.printf("[MQTT] 失败 rc=%d, 3秒后重试\n", mqtt.state());
-      delay(3000);
+      break;
     }
+    Serial.printf("[MQTT] 失败 rc=%d, 3秒后重试(%d/10)\n", mqtt.state(), i + 1);
+    delay(3000);
   }
 }
 
@@ -204,7 +244,12 @@ bool buildPayload(char *buf, size_t len) {
   }
   last.voc  = bme.gas_resistance / 1000.0;       // kOhm，后续可换算 VOC 指数
   last.temp = bme.temperature - selfHeatOffset(); // 减去自热偏移（随时间变化）→ 近似真实环境温度
-  last.humi = bme.humidity;
+  // 绝对湿度必须用 BME680 的【原始 (T,RH) 配对】——两者都基于芯片温度，自洽；
+  //   若用 last.temp(已减 ~16.7℃) 配原始 RH，算出的绝对湿度会偏小好几倍。
+  //   同一个 AH 用于两处：(1) SGP30 湿度补偿  (2) 折算环境温度下的 RH 上报
+  float ah = absHumidity(bme.temperature, bme.humidity);
+  last.humi = rhFromAbsHumidity(last.temp, ah);  // 芯片温度 RH → 补偿温度 RH（否则明显偏低）
+  sgp.setHumidity((uint32_t)(ah * 1000.0f));
   last.sgpOk = sgp.IAQmeasure();
   if (last.sgpOk) {
     last.tvoc  = sgp.TVOC;
@@ -239,6 +284,7 @@ void setup() {
   delay(300);
   Serial.println("\n===== 食品腐败检测系统 固件启动 =====");
   bootTime = millis();
+  lastPublishOk = millis();   // 自愈看门狗基准：从开机起算
 
 #if SENSORS_ENABLED
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -249,7 +295,22 @@ void setup() {
   delay(WARMUP_MS);
   if (!bme.begin(0x76, &Wire)) Serial.println("[BME680] 初始化失败，检查接线/地址");
   if (!sgp.begin())            Serial.println("[SGP30] 初始化失败，检查接线");
-  else                          sgp.IAQinit();
+  else {
+    sgp.IAQinit();
+    // ---- 基线恢复：NVS 有历史基线则立即写入，免去 ~1h 重建 ----
+    prefs.begin("sgp30", false);
+    if (prefs.isKey("eco2b") && prefs.isKey("tvocb")) {
+      uint16_t b_eco2 = prefs.getUShort("eco2b");
+      uint16_t b_tvoc = prefs.getUShort("tvocb");
+      if (sgp.setIAQBaseline(b_eco2, b_tvoc))
+        Serial.printf("[SGP30] 基线恢复成功 eco2=%u tvoc=%u\n", b_eco2, b_tvoc);
+      else
+        Serial.println("[SGP30] 基线恢复失败，走默认自校准");
+    } else {
+      Serial.println("[SGP30] NVS 无历史基线，首次运行走默认自校准");
+    }
+    lastBaselineSave = millis();
+  }
   Serial.println("[传感器] SGP30 前15秒输出固定值，属正常现象");
 
   // 开机自热推断：用 BME680 首读数判断芯片是否已热（死区判据）
@@ -273,6 +334,17 @@ void setup() {
 }
 
 void loop() {
+  // ---- 自愈看门狗：连续 30 分钟无成功发布 → 重启（覆盖掉线/挂死/被踢全部场景）----
+  if (millis() - lastPublishOk >= PUBLISH_FAIL_REBOOT_MS) {
+    Serial.println("[自愈] 连续30分钟无成功发布，重启设备...");
+#if SENSORS_ENABLED
+    oledShow("Self-heal reboot", "no publish 30min",
+             (WiFi.status() == WL_CONNECTED) ? WiFi.SSID().c_str() : "WiFi lost", "");
+#endif
+    delay(500);
+    ESP.restart();
+  }
+
   if (WiFi.status() != WL_CONNECTED) {   // WiFi 掉线：先重连上次网络(NVS)，再试已知网络
     Serial.println("[WiFi] 掉线，尝试重连...");
     WiFi.reconnect();
@@ -288,10 +360,22 @@ void loop() {
     char buf[256];
     if (buildPayload(buf, sizeof(buf))) {
       bool ok = mqtt.publish(TOPIC_SET, buf);   // /set 后缀才会推送给 PC 订阅端
+      if (ok) lastPublishOk = millis();         // 喂自愈看门狗
       Serial.printf("[MQTT] 发布%s: %s\n", ok ? "成功" : "失败", buf);
     }
 #if SENSORS_ENABLED
     oledUpdate(true, mqtt.connected());         // 每个上报周期刷新 OLED 状态屏
+
+    // ---- SGP30 基线定期保存到 NVS（30min 一次，NVS 自带磨损均衡）----
+    if (last.sgpOk && millis() - lastBaselineSave >= SGP_BASELINE_SAVE_MS) {
+      lastBaselineSave = millis();
+      uint16_t b_eco2, b_tvoc;
+      if (sgp.getIAQBaseline(&b_eco2, &b_tvoc)) {
+        prefs.putUShort("eco2b", b_eco2);
+        prefs.putUShort("tvocb", b_tvoc);
+        Serial.printf("[SGP30] 基线已存 NVS eco2=%u tvoc=%u\n", b_eco2, b_tvoc);
+      }
+    }
 #endif
   }
 }
